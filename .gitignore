@@ -1,2 +1,4 @@
 receiver/firmware/build/
+receiver/firmware/.dep
 transmitter/firmware/build
+transmitter/firmware/.dep
