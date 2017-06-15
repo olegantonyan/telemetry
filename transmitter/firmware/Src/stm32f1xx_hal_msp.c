@@ -4,6 +4,11 @@
   * Description        : This file provides code for the MSP Initialization 
   *                      and de-Initialization codes.
   ******************************************************************************
+  * This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
   * All rights reserved.
@@ -44,7 +49,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
-extern void Error_Handler(void);
+extern void _Error_Handler(char *, int);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -128,10 +133,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
 
-  }
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */
+  }
 
 }
 
@@ -162,10 +167,10 @@ void HAL_CRC_MspDeInit(CRC_HandleTypeDef* hcrc)
   /* USER CODE END CRC_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_CRC_CLK_DISABLE();
-  }
   /* USER CODE BEGIN CRC_MspDeInit 1 */
 
   /* USER CODE END CRC_MspDeInit 1 */
+  }
 
 }
 
@@ -221,10 +226,10 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* hspi)
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);
 
-  }
   /* USER CODE BEGIN SPI1_MspDeInit 1 */
 
   /* USER CODE END SPI1_MspDeInit 1 */
+  }
 
 }
 
