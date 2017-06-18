@@ -188,15 +188,15 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   switch (cmd)
   {
   case CDC_SEND_ENCAPSULATED_COMMAND:
- 
+
     break;
 
   case CDC_GET_ENCAPSULATED_RESPONSE:
- 
+
     break;
 
   case CDC_SET_COMM_FEATURE:
- 
+
     break;
 
   case CDC_GET_COMM_FEATURE:
@@ -218,17 +218,17 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /*                                        2 - 2 Stop bits                      */
   /* 5      | bParityType |  1   | Number | Parity                               */
   /*                                        0 - None                             */
-  /*                                        1 - Odd                              */ 
+  /*                                        1 - Odd                              */
   /*                                        2 - Even                             */
   /*                                        3 - Mark                             */
   /*                                        4 - Space                            */
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
-  case CDC_SET_LINE_CODING:   
-	
+  case CDC_SET_LINE_CODING:
+
     break;
 
-  case CDC_GET_LINE_CODING:     
+  case CDC_GET_LINE_CODING:
 
     break;
 
@@ -237,9 +237,9 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
     break;
 
   case CDC_SEND_BREAK:
- 
-    break;    
-    
+
+    break;
+
   default:
     break;
   }
@@ -293,6 +293,7 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
   }
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
   result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+  while (hcdc->TxState != 0); // wait for transmittion
   /* USER CODE END 7 */ 
   return result;
 }

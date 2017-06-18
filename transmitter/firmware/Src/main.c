@@ -52,8 +52,8 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-#include "usbd_cdc_if.h"
-#include "voltage/voltage.h"
+#include "adc/adc.h"
+#include "serial_log/serial_log.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -372,13 +372,9 @@ void StartDefaultTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
+  adc_init(&hadc1);
+  serial_log_init();
 
-  //HAL_ADC_Start(&hadc1);
-  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-
-//  HAL_ADC_Start(&hadc1);
-
-  voltage_init(&hadc1);
   /* Infinite loop */
   for(;;)
   {
@@ -387,9 +383,7 @@ void StartDefaultTask(void const * argument)
     osDelay(1000);
     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    char buf[64] = {0};
-    voltage_formatted_string(buf);
-    CDC_Transmit_FS((uint8_t *)buf, strlen(buf));
+
     //CDC_Transmit_FS((uint8_t *)get_buf(), 32);
 
   }

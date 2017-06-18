@@ -1,34 +1,35 @@
 #include <math.h>
 
-#include "voltage/voltage.h"
+#include "adc/adc.h"
 
 #define VREF 3.3
-#define DIVIDER_COEFFICIENT 7.96
-#define VOLTS_PER_BIT_AFTER_DIVIDER (VREF / 4096)
-#define VOLTS_PER_BIT_BEFORE_DIVIDER (VOLTS_PER_BIT_AFTER_DIVIDER * DIVIDER_COEFFICIENT)
+
+#define DIVIDER_COEFFICIENT_VOLTAGE 7.96
+#define VOLTS_PER_BIT (VREF / 4096)
+#define VOLTS_PER_BIT_INPUT_VOLTAGE (VOLTS_PER_BIT * DIVIDER_COEFFICIENT_VOLTAGE)
 
 static volatile uint16_t buffer[16] = {0};
 static const size_t buffer_elements = sizeof buffer / sizeof buffer[0];
 
 static double average_voltage();
 
-void voltage_init(ADC_HandleTypeDef *adc_handle) {
+void adc_init(ADC_HandleTypeDef *adc_handle) {
   HAL_ADCEx_Calibration_Start(adc_handle);
   HAL_ADC_Start_DMA(adc_handle, (uint32_t *)buffer, buffer_elements);
 }
 
-Voltage voltage_read() {
-  double val = average_voltage() * VOLTS_PER_BIT_BEFORE_DIVIDER;
+ADC_Voltage adc_voltage_read() {
+  double val = average_voltage() * VOLTS_PER_BIT_INPUT_VOLTAGE;
 
-  Voltage result;
+  ADC_Voltage result;
   result.integer = (uint16_t)val;
   result.fractional = trunc((val - result.integer) * 10000);
   return result;
 }
 
-void voltage_formatted_string(char * output_string) {
-  Voltage v = voltage_read();
-  sprintf(output_string, "%u.%04u\n", v.integer, v.fractional);
+void adc_voltage_formatted_string(char * output_string, size_t max_length) {
+  ADC_Voltage v = adc_voltage_read();
+  snprintf(output_string, max_length, "%u.%04u", v.integer, v.fractional);
 }
 
 static double average_voltage() {
