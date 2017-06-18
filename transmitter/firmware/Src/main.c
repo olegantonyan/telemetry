@@ -53,7 +53,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
-#include "adc/adc.h"
+#include "voltage/voltage.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -253,7 +253,7 @@ static void MX_ADC1_Init(void)
     */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -378,7 +378,7 @@ void StartDefaultTask(void const * argument)
 
 //  HAL_ADC_Start(&hadc1);
 
-  adc_start(&hadc1);
+  voltage_init(&hadc1);
   /* Infinite loop */
   for(;;)
   {
@@ -388,7 +388,7 @@ void StartDefaultTask(void const * argument)
     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     char buf[64] = {0};
-    adc_lipo_voltage(buf);
+    voltage_formatted_string(buf);
     CDC_Transmit_FS((uint8_t *)buf, strlen(buf));
     //CDC_Transmit_FS((uint8_t *)get_buf(), 32);
 
