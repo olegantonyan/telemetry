@@ -384,11 +384,13 @@ void StartDefaultTask(void const * argument)
   {
 
     //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    osDelay(5000);
+    osDelay(1000);
     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-
-    CDC_Transmit_FS((uint8_t *)adc_lipo_voltage(), 64);
+    char buf[64] = {0};
+    adc_lipo_voltage(buf);
+    CDC_Transmit_FS((uint8_t *)buf, strlen(buf));
+    //CDC_Transmit_FS((uint8_t *)get_buf(), 32);
 
   }
   /* USER CODE END 5 */

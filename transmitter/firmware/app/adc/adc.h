@@ -4,6 +4,7 @@
 #include "stm32f1xx_hal.h"
 
 void adc_start(ADC_HandleTypeDef *adc_handle);
-uint32_t *adc_lipo_voltage();
+void adc_lipo_voltage(char * output_string);
+uint16_t *get_buf();
 
 #endif
