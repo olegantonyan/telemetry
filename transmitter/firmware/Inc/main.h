@@ -56,6 +56,21 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define RED_LED_Pin GPIO_PIN_13
+#define RED_LED_GPIO_Port GPIOC
+#define ADC_VOLTAGE_Pin GPIO_PIN_0
+#define ADC_VOLTAGE_GPIO_Port GPIOA
+#define SI4463_SCK_Pin GPIO_PIN_5
+#define SI4463_SCK_GPIO_Port GPIOA
+#define SI4463_MISO_Pin GPIO_PIN_6
+#define SI4463_MISO_GPIO_Port GPIOA
+#define SI4463_MOSI_Pin GPIO_PIN_7
+#define SI4463_MOSI_GPIO_Port GPIOA
+#define SI4463_IRQ_Pin GPIO_PIN_0
+#define SI4463_IRQ_GPIO_Port GPIOB
+#define SI4463_nSEL_Pin GPIO_PIN_1
+#define SI4463_nSEL_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

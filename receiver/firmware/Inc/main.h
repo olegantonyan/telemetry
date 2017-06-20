@@ -3,6 +3,11 @@
   * File Name          : main.h
   * Description        : This file contains the common defines of the application
   ******************************************************************************
+  * This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
   * All rights reserved.
@@ -51,9 +56,26 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define RED_LED_Pin GPIO_PIN_13
+#define RED_LED_GPIO_Port GPIOC
+#define SI4463_SCK_Pin GPIO_PIN_5
+#define SI4463_SCK_GPIO_Port GPIOA
+#define SI4463_MISO_Pin GPIO_PIN_6
+#define SI4463_MISO_GPIO_Port GPIOA
+#define SI4463_MOSI_Pin GPIO_PIN_7
+#define SI4463_MOSI_GPIO_Port GPIOA
+#define SI4463_IRQ_Pin GPIO_PIN_0
+#define SI4463_IRQ_GPIO_Port GPIOB
+#define SI4463_nSEL_Pin GPIO_PIN_1
+#define SI4463_nSEL_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
+
+void _Error_Handler(char *, int);
+
+#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 
 /**
   * @}

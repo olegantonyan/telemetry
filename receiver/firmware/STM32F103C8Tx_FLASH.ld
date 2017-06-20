@@ -4,7 +4,7 @@
 
 **  File        : LinkerScript.ld
 **
-**  Abstract    : Linker script for STM32F103R8Tx Device with
+**  Abstract    : Linker script for STM32F103C8Tx Device with
 **                64KByte FLASH, 20KByte RAM
 **
 **                Set heap size, stack size and stack location according
