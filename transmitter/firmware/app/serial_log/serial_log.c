@@ -1,6 +1,7 @@
 #include "usbd_cdc_if.h"
 #include "cmsis_os.h"
 
+#include "serial_log/serial_log.h"
 #include "adc/adc.h"
 
 static void thread(void const *arg);
@@ -9,6 +10,10 @@ osThreadId thread_handle;
 void serial_log_init() {
   osThreadDef(serial_log_thread, thread, osPriorityNormal, 0, 128);
   thread_handle = osThreadCreate(osThread(serial_log_thread), NULL);
+}
+
+void serial_log_write(const char *str) {
+
 }
 
 static void thread(void const *arg) {
