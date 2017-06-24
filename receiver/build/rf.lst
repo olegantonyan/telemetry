@@ -1,0 +1,1058 @@
+ARM GAS  /tmp/cc3YQwNS.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 4
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"rf.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.spi_communicate,"ax",%progbits
+  16              		.align	1
+  17              		.syntax unified
+  18              		.thumb
+  19              		.thumb_func
+  20              		.fpu softvfp
+  22              	spi_communicate:
+  23              	.LFB68:
+  24              		.file 1 "app/rf/rf.c"
+   1:app/rf/rf.c   **** #include <string.h>
+   2:app/rf/rf.c   **** 
+   3:app/rf/rf.c   **** #include "rf/rf.h"
+   4:app/rf/rf.c   **** #include "rf/radio_config_Si4463.h"
+   5:app/rf/rf.c   **** #include "serial_log/serial_log.h"
+   6:app/rf/rf.c   **** #include "cmsis_os.h"
+   7:app/rf/rf.c   **** 
+   8:app/rf/rf.c   **** static SPI_HandleTypeDef *spi_handle = NULL;
+   9:app/rf/rf.c   **** static GPIO_TypeDef *nsel_port = NULL;
+  10:app/rf/rf.c   **** static uint16_t nsel = 0;
+  11:app/rf/rf.c   **** 
+  12:app/rf/rf.c   **** static void nsel_activate();
+  13:app/rf/rf.c   **** static void nsel_deactivate();
+  14:app/rf/rf.c   **** static bool spi_communicate(const uint8_t *write, size_t write_length, uint8_t *read, size_t read_l
+  15:app/rf/rf.c   **** static bool cts();
+  16:app/rf/rf.c   **** static bool wait_for_cts();
+  17:app/rf/rf.c   **** 
+  18:app/rf/rf.c   **** bool rf_init(SPI_HandleTypeDef *spi, GPIO_TypeDef *nsel_gpio, uint16_t nsel_pin) {
+  19:app/rf/rf.c   ****   spi_handle = spi;
+  20:app/rf/rf.c   ****   nsel_port = nsel_gpio;
+  21:app/rf/rf.c   ****   nsel = nsel_pin;
+  22:app/rf/rf.c   **** 
+  23:app/rf/rf.c   ****   uint8_t init_sequence[] = RADIO_CONFIGURATION_DATA_ARRAY;
+  24:app/rf/rf.c   ****   return spi_communicate(init_sequence, sizeof init_sequence, NULL, 0);
+  25:app/rf/rf.c   **** }
+  26:app/rf/rf.c   **** 
+  27:app/rf/rf.c   **** bool rf_transmit(const uint8_t *data, size_t length) {
+  28:app/rf/rf.c   ****   if (!spi_handle || !nsel_port || length == 0 || length > 64 || !wait_for_cts()) {
+  29:app/rf/rf.c   ****     return false;
+  30:app/rf/rf.c   ****   }
+  31:app/rf/rf.c   **** 
+  32:app/rf/rf.c   ****   uint8_t cmd[65] = { 0 };
+  33:app/rf/rf.c   ****   memcpy(&cmd[1], data, length);
+  34:app/rf/rf.c   ****   cmd[0] = 0x66;
+ARM GAS  /tmp/cc3YQwNS.s 			page 2
+
+
+  35:app/rf/rf.c   **** 
+  36:app/rf/rf.c   ****   return spi_communicate(cmd, length + 1, NULL, 0);
+  37:app/rf/rf.c   **** }
+  38:app/rf/rf.c   **** 
+  39:app/rf/rf.c   **** bool rf_receive(uint8_t *data, size_t length) {
+  40:app/rf/rf.c   ****   if (!spi_handle || !nsel_port ||  length == 0 || length > 64) {
+  41:app/rf/rf.c   ****     return false;
+  42:app/rf/rf.c   ****   }
+  43:app/rf/rf.c   **** 
+  44:app/rf/rf.c   ****   uint8_t cmd[] = { 0x77 };
+  45:app/rf/rf.c   ****   return spi_communicate(cmd, sizeof cmd, data, length);
+  46:app/rf/rf.c   **** }
+  47:app/rf/rf.c   **** 
+  48:app/rf/rf.c   **** static bool spi_communicate(const uint8_t *write, size_t write_length, uint8_t *read, size_t read_l
+  25              		.loc 1 48 0
+  26              		.cfi_startproc
+  27              		@ args = 0, pretend = 0, frame = 0
+  28              		@ frame_needed = 0, uses_anonymous_args = 0
+  29              	.LVL0:
+  30 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+  31              	.LCFI0:
+  32              		.cfi_def_cfa_offset 32
+  33              		.cfi_offset 3, -32
+  34              		.cfi_offset 4, -28
+  35              		.cfi_offset 5, -24
+  36              		.cfi_offset 6, -20
+  37              		.cfi_offset 7, -16
+  38              		.cfi_offset 8, -12
+  39              		.cfi_offset 9, -8
+  40              		.cfi_offset 14, -4
+  41              		.loc 1 48 0
+  42 0004 0646     		mov	r6, r0
+  43              	.LBB6:
+  44              	.LBB7:
+  49:app/rf/rf.c   ****   const size_t SPI_TIMEOUT = 500;
+  50:app/rf/rf.c   **** 
+  51:app/rf/rf.c   ****   // TODO try full duplex HAL_SPI_TransmitReceive
+  52:app/rf/rf.c   ****   nsel_activate();
+  53:app/rf/rf.c   ****   HAL_StatusTypeDef write_result = HAL_OK;
+  54:app/rf/rf.c   ****   if (write && write_length > 0) {
+  55:app/rf/rf.c   ****     write_result = HAL_SPI_Transmit(spi_handle, (uint8_t *)write, write_length, SPI_TIMEOUT);
+  56:app/rf/rf.c   ****   }
+  57:app/rf/rf.c   **** 
+  58:app/rf/rf.c   ****   HAL_StatusTypeDef read_result = HAL_OK;
+  59:app/rf/rf.c   ****   if (read && read_length > 0) {
+  60:app/rf/rf.c   ****     read_result = HAL_SPI_Receive(spi_handle, read, read_length, SPI_TIMEOUT);
+  61:app/rf/rf.c   ****   }
+  62:app/rf/rf.c   ****   nsel_deactivate();
+  63:app/rf/rf.c   **** 
+  64:app/rf/rf.c   ****   return write_result == HAL_OK && read_result == HAL_OK;
+  65:app/rf/rf.c   **** }
+  66:app/rf/rf.c   **** 
+  67:app/rf/rf.c   **** static void nsel_activate() {
+  68:app/rf/rf.c   ****   HAL_GPIO_WritePin(nsel_port, nsel, GPIO_PIN_RESET);
+  45              		.loc 1 68 0
+  46 0006 DFF87480 		ldr	r8, .L10+8
+  47 000a 1A4F     		ldr	r7, .L10
+ARM GAS  /tmp/cc3YQwNS.s 			page 3
+
+
+  48              	.LBE7:
+  49              	.LBE6:
+  48:app/rf/rf.c   ****   const size_t SPI_TIMEOUT = 500;
+  50              		.loc 1 48 0
+  51 000c 0D46     		mov	r5, r1
+  52 000e 9146     		mov	r9, r2
+  53              	.LBB10:
+  54              	.LBB8:
+  55              		.loc 1 68 0
+  56 0010 B8F80010 		ldrh	r1, [r8]
+  57              	.LVL1:
+  58 0014 0022     		movs	r2, #0
+  59              	.LVL2:
+  60 0016 3868     		ldr	r0, [r7]
+  61              	.LVL3:
+  62              	.LBE8:
+  63              	.LBE10:
+  48:app/rf/rf.c   ****   const size_t SPI_TIMEOUT = 500;
+  64              		.loc 1 48 0
+  65 0018 1C46     		mov	r4, r3
+  66              	.LBB11:
+  67              	.LBB9:
+  68              		.loc 1 68 0
+  69 001a FFF7FEFF 		bl	HAL_GPIO_WritePin
+  70              	.LVL4:
+  71              	.LBE9:
+  72              	.LBE11:
+  54:app/rf/rf.c   ****     write_result = HAL_SPI_Transmit(spi_handle, (uint8_t *)write, write_length, SPI_TIMEOUT);
+  73              		.loc 1 54 0
+  74 001e 16B3     		cbz	r6, .L5
+  54:app/rf/rf.c   ****     write_result = HAL_SPI_Transmit(spi_handle, (uint8_t *)write, write_length, SPI_TIMEOUT);
+  75              		.loc 1 54 0 is_stmt 0 discriminator 1
+  76 0020 45B1     		cbz	r5, .L2
+  55:app/rf/rf.c   ****   }
+  77              		.loc 1 55 0 is_stmt 1
+  78 0022 1548     		ldr	r0, .L10+4
+  79 0024 AAB2     		uxth	r2, r5
+  80 0026 4FF4FA73 		mov	r3, #500
+  81 002a 3146     		mov	r1, r6
+  82 002c 0068     		ldr	r0, [r0]
+  83 002e FFF7FEFF 		bl	HAL_SPI_Transmit
+  84              	.LVL5:
+  85 0032 0546     		mov	r5, r0
+  86              	.LVL6:
+  87              	.L2:
+  59:app/rf/rf.c   ****     read_result = HAL_SPI_Receive(spi_handle, read, read_length, SPI_TIMEOUT);
+  88              		.loc 1 59 0
+  89 0034 B9F1000F 		cmp	r9, #0
+  90 0038 17D0     		beq	.L7
+  59:app/rf/rf.c   ****     read_result = HAL_SPI_Receive(spi_handle, read, read_length, SPI_TIMEOUT);
+  91              		.loc 1 59 0 is_stmt 0 discriminator 1
+  92 003a 44B1     		cbz	r4, .L3
+  60:app/rf/rf.c   ****   }
+  93              		.loc 1 60 0 is_stmt 1
+  94 003c 0E48     		ldr	r0, .L10+4
+  95 003e A2B2     		uxth	r2, r4
+  96 0040 4FF4FA73 		mov	r3, #500
+ARM GAS  /tmp/cc3YQwNS.s 			page 4
+
+
+  97 0044 4946     		mov	r1, r9
+  98 0046 0068     		ldr	r0, [r0]
+  99 0048 FFF7FEFF 		bl	HAL_SPI_Receive
+ 100              	.LVL7:
+ 101 004c 0446     		mov	r4, r0
+ 102              	.LVL8:
+ 103              	.L3:
+ 104              	.LBB12:
+ 105              	.LBB13:
+  69:app/rf/rf.c   **** }
+  70:app/rf/rf.c   **** 
+  71:app/rf/rf.c   **** static void nsel_deactivate() {
+  72:app/rf/rf.c   ****   HAL_GPIO_WritePin(nsel_port, nsel, GPIO_PIN_SET);
+ 106              		.loc 1 72 0
+ 107 004e 0122     		movs	r2, #1
+ 108 0050 B8F80010 		ldrh	r1, [r8]
+ 109 0054 3868     		ldr	r0, [r7]
+ 110 0056 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 111              	.LVL9:
+ 112              	.LBE13:
+ 113              	.LBE12:
+  64:app/rf/rf.c   **** }
+ 114              		.loc 1 64 0
+ 115 005a 45B9     		cbnz	r5, .L9
+  64:app/rf/rf.c   **** }
+ 116              		.loc 1 64 0 is_stmt 0 discriminator 1
+ 117 005c B4FA84F0 		clz	r0, r4
+ 118 0060 4009     		lsrs	r0, r0, #5
+ 119 0062 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 120              	.LVL10:
+ 121              	.L5:
+  53:app/rf/rf.c   ****   if (write && write_length > 0) {
+ 122              		.loc 1 53 0 is_stmt 1
+ 123 0066 3546     		mov	r5, r6
+ 124              	.LVL11:
+ 125 0068 E4E7     		b	.L2
+ 126              	.LVL12:
+ 127              	.L7:
+  58:app/rf/rf.c   ****   if (read && read_length > 0) {
+ 128              		.loc 1 58 0
+ 129 006a 4C46     		mov	r4, r9
+ 130              	.LVL13:
+ 131 006c EFE7     		b	.L3
+ 132              	.LVL14:
+ 133              	.L9:
+ 134 006e 0020     		movs	r0, #0
+  65:app/rf/rf.c   **** 
+ 135              		.loc 1 65 0
+ 136 0070 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 137              	.LVL15:
+ 138              	.L11:
+ 139              		.align	2
+ 140              	.L10:
+ 141 0074 00000000 		.word	.LANCHOR1
+ 142 0078 00000000 		.word	.LANCHOR2
+ 143 007c 00000000 		.word	.LANCHOR0
+ 144              		.cfi_endproc
+ARM GAS  /tmp/cc3YQwNS.s 			page 5
+
+
+ 145              	.LFE68:
+ 147              		.section	.text.rf_init,"ax",%progbits
+ 148              		.align	1
+ 149              		.global	rf_init
+ 150              		.syntax unified
+ 151              		.thumb
+ 152              		.thumb_func
+ 153              		.fpu softvfp
+ 155              	rf_init:
+ 156              	.LFB65:
+  18:app/rf/rf.c   ****   spi_handle = spi;
+ 157              		.loc 1 18 0
+ 158              		.cfi_startproc
+ 159              		@ args = 0, pretend = 0, frame = 368
+ 160              		@ frame_needed = 0, uses_anonymous_args = 0
+ 161              	.LVL16:
+ 162 0000 10B5     		push	{r4, lr}
+ 163              	.LCFI1:
+ 164              		.cfi_def_cfa_offset 8
+ 165              		.cfi_offset 4, -8
+ 166              		.cfi_offset 14, -4
+  23:app/rf/rf.c   ****   return spi_communicate(init_sequence, sizeof init_sequence, NULL, 0);
+ 167              		.loc 1 23 0
+ 168 0002 4FF4B674 		mov	r4, #364
+  19:app/rf/rf.c   ****   nsel_port = nsel_gpio;
+ 169              		.loc 1 19 0
+ 170 0006 0A4B     		ldr	r3, .L13
+  18:app/rf/rf.c   ****   spi_handle = spi;
+ 171              		.loc 1 18 0
+ 172 0008 DCB0     		sub	sp, sp, #368
+ 173              	.LCFI2:
+ 174              		.cfi_def_cfa_offset 376
+  19:app/rf/rf.c   ****   nsel_port = nsel_gpio;
+ 175              		.loc 1 19 0
+ 176 000a 1860     		str	r0, [r3]
+  20:app/rf/rf.c   ****   nsel = nsel_pin;
+ 177              		.loc 1 20 0
+ 178 000c 094B     		ldr	r3, .L13+4
+  23:app/rf/rf.c   ****   return spi_communicate(init_sequence, sizeof init_sequence, NULL, 0);
+ 179              		.loc 1 23 0
+ 180 000e 01A8     		add	r0, sp, #4
+ 181              	.LVL17:
+  20:app/rf/rf.c   ****   nsel = nsel_pin;
+ 182              		.loc 1 20 0
+ 183 0010 1960     		str	r1, [r3]
+  21:app/rf/rf.c   **** 
+ 184              		.loc 1 21 0
+ 185 0012 094B     		ldr	r3, .L13+8
+  23:app/rf/rf.c   ****   return spi_communicate(init_sequence, sizeof init_sequence, NULL, 0);
+ 186              		.loc 1 23 0
+ 187 0014 0949     		ldr	r1, .L13+12
+ 188              	.LVL18:
+  21:app/rf/rf.c   **** 
+ 189              		.loc 1 21 0
+ 190 0016 1A80     		strh	r2, [r3]	@ movhi
+  23:app/rf/rf.c   ****   return spi_communicate(init_sequence, sizeof init_sequence, NULL, 0);
+ 191              		.loc 1 23 0
+ARM GAS  /tmp/cc3YQwNS.s 			page 6
+
+
+ 192 0018 2246     		mov	r2, r4
+ 193              	.LVL19:
+ 194 001a FFF7FEFF 		bl	memcpy
+ 195              	.LVL20:
+  24:app/rf/rf.c   **** }
+ 196              		.loc 1 24 0
+ 197 001e 0023     		movs	r3, #0
+ 198 0020 2146     		mov	r1, r4
+ 199 0022 1A46     		mov	r2, r3
+ 200 0024 01A8     		add	r0, sp, #4
+ 201 0026 FFF7FEFF 		bl	spi_communicate
+ 202              	.LVL21:
+  25:app/rf/rf.c   **** 
+ 203              		.loc 1 25 0
+ 204 002a 5CB0     		add	sp, sp, #368
+ 205              	.LCFI3:
+ 206              		.cfi_def_cfa_offset 8
+ 207              		@ sp needed
+ 208 002c 10BD     		pop	{r4, pc}
+ 209              	.L14:
+ 210 002e 00BF     		.align	2
+ 211              	.L13:
+ 212 0030 00000000 		.word	.LANCHOR2
+ 213 0034 00000000 		.word	.LANCHOR1
+ 214 0038 00000000 		.word	.LANCHOR0
+ 215 003c 00000000 		.word	.LANCHOR3
+ 216              		.cfi_endproc
+ 217              	.LFE65:
+ 219              		.section	.text.rf_transmit,"ax",%progbits
+ 220              		.align	1
+ 221              		.global	rf_transmit
+ 222              		.syntax unified
+ 223              		.thumb
+ 224              		.thumb_func
+ 225              		.fpu softvfp
+ 227              	rf_transmit:
+ 228              	.LFB66:
+  27:app/rf/rf.c   ****   if (!spi_handle || !nsel_port || length == 0 || length > 64 || !wait_for_cts()) {
+ 229              		.loc 1 27 0
+ 230              		.cfi_startproc
+ 231              		@ args = 0, pretend = 0, frame = 72
+ 232              		@ frame_needed = 0, uses_anonymous_args = 0
+ 233              	.LVL22:
+ 234 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 235              	.LCFI4:
+ 236              		.cfi_def_cfa_offset 24
+ 237              		.cfi_offset 4, -24
+ 238              		.cfi_offset 5, -20
+ 239              		.cfi_offset 6, -16
+ 240              		.cfi_offset 7, -12
+ 241              		.cfi_offset 8, -8
+ 242              		.cfi_offset 14, -4
+  28:app/rf/rf.c   ****     return false;
+ 243              		.loc 1 28 0
+ 244 0004 214B     		ldr	r3, .L31
+  27:app/rf/rf.c   ****   if (!spi_handle || !nsel_port || length == 0 || length > 64 || !wait_for_cts()) {
+ 245              		.loc 1 27 0
+ARM GAS  /tmp/cc3YQwNS.s 			page 7
+
+
+ 246 0006 92B0     		sub	sp, sp, #72
+ 247              	.LCFI5:
+ 248              		.cfi_def_cfa_offset 96
+  28:app/rf/rf.c   ****     return false;
+ 249              		.loc 1 28 0
+ 250 0008 1B68     		ldr	r3, [r3]
+  27:app/rf/rf.c   ****   if (!spi_handle || !nsel_port || length == 0 || length > 64 || !wait_for_cts()) {
+ 251              		.loc 1 27 0
+ 252 000a 0646     		mov	r6, r0
+ 253 000c 0D46     		mov	r5, r1
+  28:app/rf/rf.c   ****     return false;
+ 254              		.loc 1 28 0
+ 255 000e 1BB9     		cbnz	r3, .L16
+ 256              	.LVL23:
+ 257              	.L18:
+  29:app/rf/rf.c   ****   }
+ 258              		.loc 1 29 0
+ 259 0010 0020     		movs	r0, #0
+ 260              	.L17:
+  37:app/rf/rf.c   **** 
+ 261              		.loc 1 37 0
+ 262 0012 12B0     		add	sp, sp, #72
+ 263              	.LCFI6:
+ 264              		.cfi_remember_state
+ 265              		.cfi_def_cfa_offset 24
+ 266              		@ sp needed
+ 267 0014 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 268              	.LVL24:
+ 269              	.L16:
+ 270              	.LCFI7:
+ 271              		.cfi_restore_state
+  28:app/rf/rf.c   ****     return false;
+ 272              		.loc 1 28 0 discriminator 1
+ 273 0018 1D4B     		ldr	r3, .L31+4
+ 274 001a 1B68     		ldr	r3, [r3]
+ 275 001c 002B     		cmp	r3, #0
+ 276 001e F7D0     		beq	.L18
+  28:app/rf/rf.c   ****     return false;
+ 277              		.loc 1 28 0 is_stmt 0 discriminator 2
+ 278 0020 4B1E     		subs	r3, r1, #1
+ 279 0022 3F2B     		cmp	r3, #63
+ 280 0024 F4D8     		bhi	.L18
+ 281 0026 0A24     		movs	r4, #10
+ 282              	.LBB18:
+ 283              	.LBB19:
+ 284              	.LBB20:
+ 285              	.LBB21:
+  73:app/rf/rf.c   **** }
+  74:app/rf/rf.c   **** 
+  75:app/rf/rf.c   **** static bool cts() {
+  76:app/rf/rf.c   ****   const uint8_t data[] = { 0x44 };
+ 286              		.loc 1 76 0 is_stmt 1
+ 287 0028 4427     		movs	r7, #68
+  77:app/rf/rf.c   ****   uint8_t read_byte = 0;
+ 288              		.loc 1 77 0
+ 289 002a 4FF00008 		mov	r8, #0
+ 290              	.LVL25:
+ARM GAS  /tmp/cc3YQwNS.s 			page 8
+
+
+ 291              	.L19:
+  78:app/rf/rf.c   ****   //HAL_SPI_TransmitReceive(spi_handle, (uint8_t *)data, &read_byte, 1, 500);
+  79:app/rf/rf.c   ****   if (!spi_communicate(data, sizeof data, &read_byte, sizeof read_byte)) {
+ 292              		.loc 1 79 0
+ 293 002e 0123     		movs	r3, #1
+ 294 0030 01AA     		add	r2, sp, #4
+ 295 0032 1946     		mov	r1, r3
+ 296 0034 6846     		mov	r0, sp
+  76:app/rf/rf.c   ****   uint8_t read_byte = 0;
+ 297              		.loc 1 76 0
+ 298 0036 8DF80070 		strb	r7, [sp]
+  77:app/rf/rf.c   ****   uint8_t read_byte = 0;
+ 299              		.loc 1 77 0
+ 300 003a 8DF80480 		strb	r8, [sp, #4]
+ 301              		.loc 1 79 0
+ 302 003e FFF7FEFF 		bl	spi_communicate
+ 303              	.LVL26:
+ 304 0042 18B1     		cbz	r0, .L24
+  80:app/rf/rf.c   ****     return false;
+  81:app/rf/rf.c   ****   }
+  82:app/rf/rf.c   ****   return read_byte == 0xFF;
+ 305              		.loc 1 82 0
+ 306 0044 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ 307              	.LBE21:
+ 308              	.LBE20:
+  83:app/rf/rf.c   **** }
+  84:app/rf/rf.c   **** 
+  85:app/rf/rf.c   **** static bool wait_for_cts() {
+  86:app/rf/rf.c   ****   const size_t MAX_CTS_RETRIES = 10;
+  87:app/rf/rf.c   ****   const size_t CTS_RETRY_DELAY = 10;
+  88:app/rf/rf.c   **** 
+  89:app/rf/rf.c   ****   size_t i = MAX_CTS_RETRIES;
+  90:app/rf/rf.c   ****   while (!cts() && i-- > 0) {
+ 309              		.loc 1 90 0
+ 310 0048 FF2B     		cmp	r3, #255
+ 311 004a 1BD0     		beq	.L21
+ 312              	.L24:
+ 313 004c 14F1FF34 		adds	r4, r4, #-1
+ 314              	.LVL27:
+ 315 0050 14D2     		bcs	.L22
+ 316              	.LVL28:
+ 317              	.L23:
+ 318              	.LBE19:
+ 319              	.LBE18:
+  32:app/rf/rf.c   ****   memcpy(&cmd[1], data, length);
+ 320              		.loc 1 32 0
+ 321 0052 4122     		movs	r2, #65
+ 322 0054 0021     		movs	r1, #0
+ 323 0056 01A8     		add	r0, sp, #4
+ 324 0058 FFF7FEFF 		bl	memset
+ 325              	.LVL29:
+  33:app/rf/rf.c   ****   cmd[0] = 0x66;
+ 326              		.loc 1 33 0
+ 327 005c 2A46     		mov	r2, r5
+ 328 005e 3146     		mov	r1, r6
+ 329 0060 0DF10500 		add	r0, sp, #5
+ 330 0064 FFF7FEFF 		bl	memcpy
+ARM GAS  /tmp/cc3YQwNS.s 			page 9
+
+
+ 331              	.LVL30:
+  34:app/rf/rf.c   **** 
+ 332              		.loc 1 34 0
+ 333 0068 6623     		movs	r3, #102
+ 334 006a 8DF80430 		strb	r3, [sp, #4]
+  36:app/rf/rf.c   **** }
+ 335              		.loc 1 36 0
+ 336 006e 0023     		movs	r3, #0
+ 337 0070 691C     		adds	r1, r5, #1
+ 338 0072 1A46     		mov	r2, r3
+ 339 0074 01A8     		add	r0, sp, #4
+ 340 0076 FFF7FEFF 		bl	spi_communicate
+ 341              	.LVL31:
+ 342 007a CAE7     		b	.L17
+ 343              	.LVL32:
+ 344              	.L22:
+ 345              	.LBB23:
+ 346              	.LBB22:
+  91:app/rf/rf.c   ****     osDelay(CTS_RETRY_DELAY);
+ 347              		.loc 1 91 0
+ 348 007c 0A20     		movs	r0, #10
+ 349 007e FFF7FEFF 		bl	osDelay
+ 350              	.LVL33:
+ 351 0082 D4E7     		b	.L19
+ 352              	.LVL34:
+ 353              	.L21:
+ 354              	.LBE22:
+ 355              	.LBE23:
+  28:app/rf/rf.c   ****     return false;
+ 356              		.loc 1 28 0
+ 357 0084 002C     		cmp	r4, #0
+ 358 0086 C3D0     		beq	.L18
+ 359 0088 E3E7     		b	.L23
+ 360              	.L32:
+ 361 008a 00BF     		.align	2
+ 362              	.L31:
+ 363 008c 00000000 		.word	.LANCHOR2
+ 364 0090 00000000 		.word	.LANCHOR1
+ 365              		.cfi_endproc
+ 366              	.LFE66:
+ 368              		.section	.text.rf_receive,"ax",%progbits
+ 369              		.align	1
+ 370              		.global	rf_receive
+ 371              		.syntax unified
+ 372              		.thumb
+ 373              		.thumb_func
+ 374              		.fpu softvfp
+ 376              	rf_receive:
+ 377              	.LFB67:
+  39:app/rf/rf.c   ****   if (!spi_handle || !nsel_port ||  length == 0 || length > 64) {
+ 378              		.loc 1 39 0
+ 379              		.cfi_startproc
+ 380              		@ args = 0, pretend = 0, frame = 8
+ 381              		@ frame_needed = 0, uses_anonymous_args = 0
+ 382              	.LVL35:
+ 383 0000 07B5     		push	{r0, r1, r2, lr}
+ 384              	.LCFI8:
+ARM GAS  /tmp/cc3YQwNS.s 			page 10
+
+
+ 385              		.cfi_def_cfa_offset 16
+ 386              		.cfi_offset 14, -4
+  39:app/rf/rf.c   ****   if (!spi_handle || !nsel_port ||  length == 0 || length > 64) {
+ 387              		.loc 1 39 0
+ 388 0002 0B46     		mov	r3, r1
+  40:app/rf/rf.c   ****     return false;
+ 389              		.loc 1 40 0
+ 390 0004 0A49     		ldr	r1, .L38
+ 391              	.LVL36:
+  39:app/rf/rf.c   ****   if (!spi_handle || !nsel_port ||  length == 0 || length > 64) {
+ 392              		.loc 1 39 0
+ 393 0006 0246     		mov	r2, r0
+  40:app/rf/rf.c   ****     return false;
+ 394              		.loc 1 40 0
+ 395 0008 0868     		ldr	r0, [r1]
+ 396              	.LVL37:
+ 397 000a 60B1     		cbz	r0, .L34
+  40:app/rf/rf.c   ****     return false;
+ 398              		.loc 1 40 0 is_stmt 0 discriminator 1
+ 399 000c 0949     		ldr	r1, .L38+4
+ 400 000e 0868     		ldr	r0, [r1]
+ 401 0010 48B1     		cbz	r0, .L34
+  40:app/rf/rf.c   ****     return false;
+ 402              		.loc 1 40 0 discriminator 2
+ 403 0012 591E     		subs	r1, r3, #1
+ 404 0014 3F29     		cmp	r1, #63
+ 405 0016 09D8     		bhi	.L37
+  44:app/rf/rf.c   ****   return spi_communicate(cmd, sizeof cmd, data, length);
+ 406              		.loc 1 44 0 is_stmt 1
+ 407 0018 7721     		movs	r1, #119
+ 408 001a 02A8     		add	r0, sp, #8
+ 409 001c 00F8041D 		strb	r1, [r0, #-4]!
+  45:app/rf/rf.c   **** }
+ 410              		.loc 1 45 0
+ 411 0020 0121     		movs	r1, #1
+ 412 0022 FFF7FEFF 		bl	spi_communicate
+ 413              	.LVL38:
+ 414              	.L34:
+  46:app/rf/rf.c   **** 
+ 415              		.loc 1 46 0
+ 416 0026 03B0     		add	sp, sp, #12
+ 417              	.LCFI9:
+ 418              		.cfi_remember_state
+ 419              		.cfi_def_cfa_offset 4
+ 420              		@ sp needed
+ 421 0028 5DF804FB 		ldr	pc, [sp], #4
+ 422              	.LVL39:
+ 423              	.L37:
+ 424              	.LCFI10:
+ 425              		.cfi_restore_state
+  41:app/rf/rf.c   ****   }
+ 426              		.loc 1 41 0
+ 427 002c 0020     		movs	r0, #0
+ 428 002e FAE7     		b	.L34
+ 429              	.L39:
+ 430              		.align	2
+ 431              	.L38:
+ARM GAS  /tmp/cc3YQwNS.s 			page 11
+
+
+ 432 0030 00000000 		.word	.LANCHOR2
+ 433 0034 00000000 		.word	.LANCHOR1
+ 434              		.cfi_endproc
+ 435              	.LFE67:
+ 437              		.section	.rodata
+ 438              		.set	.LANCHOR3,. + 0
+ 439              	.LC0:
+ 440 0000 07       		.byte	7
+ 441 0001 02       		.byte	2
+ 442 0002 01       		.byte	1
+ 443 0003 00       		.byte	0
+ 444 0004 01       		.byte	1
+ 445 0005 8C       		.byte	-116
+ 446 0006 BA       		.byte	-70
+ 447 0007 80       		.byte	-128
+ 448 0008 08       		.byte	8
+ 449 0009 13       		.byte	19
+ 450 000a 00       		.byte	0
+ 451 000b 00       		.byte	0
+ 452 000c 00       		.byte	0
+ 453 000d 00       		.byte	0
+ 454 000e 00       		.byte	0
+ 455 000f 00       		.byte	0
+ 456 0010 00       		.byte	0
+ 457 0011 06       		.byte	6
+ 458 0012 11       		.byte	17
+ 459 0013 00       		.byte	0
+ 460 0014 02       		.byte	2
+ 461 0015 00       		.byte	0
+ 462 0016 52       		.byte	82
+ 463 0017 00       		.byte	0
+ 464 0018 05       		.byte	5
+ 465 0019 11       		.byte	17
+ 466 001a 00       		.byte	0
+ 467 001b 01       		.byte	1
+ 468 001c 03       		.byte	3
+ 469 001d 60       		.byte	96
+ 470 001e 06       		.byte	6
+ 471 001f 11       		.byte	17
+ 472 0020 01       		.byte	1
+ 473 0021 02       		.byte	2
+ 474 0022 00       		.byte	0
+ 475 0023 01       		.byte	1
+ 476 0024 10       		.byte	16
+ 477 0025 08       		.byte	8
+ 478 0026 11       		.byte	17
+ 479 0027 02       		.byte	2
+ 480 0028 04       		.byte	4
+ 481 0029 00       		.byte	0
+ 482 002a 00       		.byte	0
+ 483 002b 00       		.byte	0
+ 484 002c 00       		.byte	0
+ 485 002d 00       		.byte	0
+ 486 002e 0D       		.byte	13
+ 487 002f 11       		.byte	17
+ 488 0030 10       		.byte	16
+ 489 0031 09       		.byte	9
+ARM GAS  /tmp/cc3YQwNS.s 			page 12
+
+
+ 490 0032 00       		.byte	0
+ 491 0033 08       		.byte	8
+ 492 0034 14       		.byte	20
+ 493 0035 00       		.byte	0
+ 494 0036 0F       		.byte	15
+ 495 0037 31       		.byte	49
+ 496 0038 00       		.byte	0
+ 497 0039 00       		.byte	0
+ 498 003a 00       		.byte	0
+ 499 003b 00       		.byte	0
+ 500 003c 09       		.byte	9
+ 501 003d 11       		.byte	17
+ 502 003e 11       		.byte	17
+ 503 003f 05       		.byte	5
+ 504 0040 00       		.byte	0
+ 505 0041 01       		.byte	1
+ 506 0042 B4       		.byte	-76
+ 507 0043 2B       		.byte	43
+ 508 0044 00       		.byte	0
+ 509 0045 00       		.byte	0
+ 510 0046 0B       		.byte	11
+ 511 0047 11       		.byte	17
+ 512 0048 12       		.byte	18
+ 513 0049 07       		.byte	7
+ 514 004a 00       		.byte	0
+ 515 004b 84       		.byte	-124
+ 516 004c 01       		.byte	1
+ 517 004d 08       		.byte	8
+ 518 004e FF       		.byte	-1
+ 519 004f FF       		.byte	-1
+ 520 0050 00       		.byte	0
+ 521 0051 02       		.byte	2
+ 522 0052 10       		.byte	16
+ 523 0053 11       		.byte	17
+ 524 0054 12       		.byte	18
+ 525 0055 0C       		.byte	12
+ 526 0056 08       		.byte	8
+ 527 0057 00       		.byte	0
+ 528 0058 00       		.byte	0
+ 529 0059 00       		.byte	0
+ 530 005a 30       		.byte	48
+ 531 005b 30       		.byte	48
+ 532 005c 00       		.byte	0
+ 533 005d 07       		.byte	7
+ 534 005e 04       		.byte	4
+ 535 005f 80       		.byte	-128
+ 536 0060 00       		.byte	0
+ 537 0061 00       		.byte	0
+ 538 0062 00       		.byte	0
+ 539 0063 10       		.byte	16
+ 540 0064 11       		.byte	17
+ 541 0065 12       		.byte	18
+ 542 0066 0C       		.byte	12
+ 543 0067 14       		.byte	20
+ 544 0068 00       		.byte	0
+ 545 0069 00       		.byte	0
+ 546 006a 00       		.byte	0
+ARM GAS  /tmp/cc3YQwNS.s 			page 13
+
+
+ 547 006b 00       		.byte	0
+ 548 006c 00       		.byte	0
+ 549 006d 00       		.byte	0
+ 550 006e 00       		.byte	0
+ 551 006f 00       		.byte	0
+ 552 0070 00       		.byte	0
+ 553 0071 00       		.byte	0
+ 554 0072 00       		.byte	0
+ 555 0073 00       		.byte	0
+ 556 0074 10       		.byte	16
+ 557 0075 11       		.byte	17
+ 558 0076 12       		.byte	18
+ 559 0077 0C       		.byte	12
+ 560 0078 20       		.byte	32
+ 561 0079 00       		.byte	0
+ 562 007a 00       		.byte	0
+ 563 007b 00       		.byte	0
+ 564 007c 00       		.byte	0
+ 565 007d 00       		.byte	0
+ 566 007e 00       		.byte	0
+ 567 007f 00       		.byte	0
+ 568 0080 00       		.byte	0
+ 569 0081 00       		.byte	0
+ 570 0082 00       		.byte	0
+ 571 0083 00       		.byte	0
+ 572 0084 00       		.byte	0
+ 573 0085 0D       		.byte	13
+ 574 0086 11       		.byte	17
+ 575 0087 12       		.byte	18
+ 576 0088 09       		.byte	9
+ 577 0089 2C       		.byte	44
+ 578 008a 00       		.byte	0
+ 579 008b 00       		.byte	0
+ 580 008c 00       		.byte	0
+ 581 008d 00       		.byte	0
+ 582 008e 00       		.byte	0
+ 583 008f 00       		.byte	0
+ 584 0090 00       		.byte	0
+ 585 0091 00       		.byte	0
+ 586 0092 00       		.byte	0
+ 587 0093 10       		.byte	16
+ 588 0094 11       		.byte	17
+ 589 0095 20       		.byte	32
+ 590 0096 0C       		.byte	12
+ 591 0097 00       		.byte	0
+ 592 0098 02       		.byte	2
+ 593 0099 00       		.byte	0
+ 594 009a 07       		.byte	7
+ 595 009b 01       		.byte	1
+ 596 009c 86       		.byte	-122
+ 597 009d A0       		.byte	-96
+ 598 009e 01       		.byte	1
+ 599 009f 8C       		.byte	-116
+ 600 00a0 BA       		.byte	-70
+ 601 00a1 80       		.byte	-128
+ 602 00a2 00       		.byte	0
+ 603 00a3 06       		.byte	6
+ARM GAS  /tmp/cc3YQwNS.s 			page 14
+
+
+ 604 00a4 05       		.byte	5
+ 605 00a5 11       		.byte	17
+ 606 00a6 20       		.byte	32
+ 607 00a7 01       		.byte	1
+ 608 00a8 0C       		.byte	12
+ 609 00a9 4D       		.byte	77
+ 610 00aa 0C       		.byte	12
+ 611 00ab 11       		.byte	17
+ 612 00ac 20       		.byte	32
+ 613 00ad 08       		.byte	8
+ 614 00ae 18       		.byte	24
+ 615 00af 01       		.byte	1
+ 616 00b0 80       		.byte	-128
+ 617 00b1 08       		.byte	8
+ 618 00b2 03       		.byte	3
+ 619 00b3 80       		.byte	-128
+ 620 00b4 00       		.byte	0
+ 621 00b5 20       		.byte	32
+ 622 00b6 20       		.byte	32
+ 623 00b7 0D       		.byte	13
+ 624 00b8 11       		.byte	17
+ 625 00b9 20       		.byte	32
+ 626 00ba 09       		.byte	9
+ 627 00bb 22       		.byte	34
+ 628 00bc 01       		.byte	1
+ 629 00bd 45       		.byte	69
+ 630 00be 01       		.byte	1
+ 631 00bf 93       		.byte	-109
+ 632 00c0 4C       		.byte	76
+ 633 00c1 00       		.byte	0
+ 634 00c2 CA       		.byte	-54
+ 635 00c3 02       		.byte	2
+ 636 00c4 C2       		.byte	-62
+ 637 00c5 0B       		.byte	11
+ 638 00c6 11       		.byte	17
+ 639 00c7 20       		.byte	32
+ 640 00c8 07       		.byte	7
+ 641 00c9 2C       		.byte	44
+ 642 00ca 04       		.byte	4
+ 643 00cb 36       		.byte	54
+ 644 00cc 80       		.byte	-128
+ 645 00cd 22       		.byte	34
+ 646 00ce 0F       		.byte	15
+ 647 00cf 50       		.byte	80
+ 648 00d0 80       		.byte	-128
+ 649 00d1 05       		.byte	5
+ 650 00d2 11       		.byte	17
+ 651 00d3 20       		.byte	32
+ 652 00d4 01       		.byte	1
+ 653 00d5 35       		.byte	53
+ 654 00d6 E2       		.byte	-30
+ 655 00d7 0D       		.byte	13
+ 656 00d8 11       		.byte	17
+ 657 00d9 20       		.byte	32
+ 658 00da 09       		.byte	9
+ 659 00db 38       		.byte	56
+ 660 00dc 11       		.byte	17
+ARM GAS  /tmp/cc3YQwNS.s 			page 15
+
+
+ 661 00dd 47       		.byte	71
+ 662 00de 47       		.byte	71
+ 663 00df 00       		.byte	0
+ 664 00e0 02       		.byte	2
+ 665 00e1 FF       		.byte	-1
+ 666 00e2 FF       		.byte	-1
+ 667 00e3 00       		.byte	0
+ 668 00e4 2A       		.byte	42
+ 669 00e5 0D       		.byte	13
+ 670 00e6 11       		.byte	17
+ 671 00e7 20       		.byte	32
+ 672 00e8 09       		.byte	9
+ 673 00e9 42       		.byte	66
+ 674 00ea A4       		.byte	-92
+ 675 00eb 02       		.byte	2
+ 676 00ec D6       		.byte	-42
+ 677 00ed 83       		.byte	-125
+ 678 00ee 01       		.byte	1
+ 679 00ef 4D       		.byte	77
+ 680 00f0 01       		.byte	1
+ 681 00f1 80       		.byte	-128
+ 682 00f2 FF       		.byte	-1
+ 683 00f3 05       		.byte	5
+ 684 00f4 11       		.byte	17
+ 685 00f5 20       		.byte	32
+ 686 00f6 01       		.byte	1
+ 687 00f7 4C       		.byte	76
+ 688 00f8 00       		.byte	0
+ 689 00f9 05       		.byte	5
+ 690 00fa 11       		.byte	17
+ 691 00fb 20       		.byte	32
+ 692 00fc 01       		.byte	1
+ 693 00fd 4E       		.byte	78
+ 694 00fe 40       		.byte	64
+ 695 00ff 05       		.byte	5
+ 696 0100 11       		.byte	17
+ 697 0101 20       		.byte	32
+ 698 0102 01       		.byte	1
+ 699 0103 51       		.byte	81
+ 700 0104 0A       		.byte	10
+ 701 0105 10       		.byte	16
+ 702 0106 11       		.byte	17
+ 703 0107 21       		.byte	33
+ 704 0108 0C       		.byte	12
+ 705 0109 00       		.byte	0
+ 706 010a CC       		.byte	-52
+ 707 010b A1       		.byte	-95
+ 708 010c 30       		.byte	48
+ 709 010d A0       		.byte	-96
+ 710 010e 21       		.byte	33
+ 711 010f D1       		.byte	-47
+ 712 0110 B9       		.byte	-71
+ 713 0111 C9       		.byte	-55
+ 714 0112 EA       		.byte	-22
+ 715 0113 05       		.byte	5
+ 716 0114 12       		.byte	18
+ 717 0115 11       		.byte	17
+ARM GAS  /tmp/cc3YQwNS.s 			page 16
+
+
+ 718 0116 10       		.byte	16
+ 719 0117 11       		.byte	17
+ 720 0118 21       		.byte	33
+ 721 0119 0C       		.byte	12
+ 722 011a 0C       		.byte	12
+ 723 011b 0A       		.byte	10
+ 724 011c 04       		.byte	4
+ 725 011d 15       		.byte	21
+ 726 011e FC       		.byte	-4
+ 727 011f 03       		.byte	3
+ 728 0120 00       		.byte	0
+ 729 0121 CC       		.byte	-52
+ 730 0122 A1       		.byte	-95
+ 731 0123 30       		.byte	48
+ 732 0124 A0       		.byte	-96
+ 733 0125 21       		.byte	33
+ 734 0126 D1       		.byte	-47
+ 735 0127 10       		.byte	16
+ 736 0128 11       		.byte	17
+ 737 0129 21       		.byte	33
+ 738 012a 0C       		.byte	12
+ 739 012b 18       		.byte	24
+ 740 012c B9       		.byte	-71
+ 741 012d C9       		.byte	-55
+ 742 012e EA       		.byte	-22
+ 743 012f 05       		.byte	5
+ 744 0130 12       		.byte	18
+ 745 0131 11       		.byte	17
+ 746 0132 0A       		.byte	10
+ 747 0133 04       		.byte	4
+ 748 0134 15       		.byte	21
+ 749 0135 FC       		.byte	-4
+ 750 0136 03       		.byte	3
+ 751 0137 00       		.byte	0
+ 752 0138 08       		.byte	8
+ 753 0139 11       		.byte	17
+ 754 013a 22       		.byte	34
+ 755 013b 04       		.byte	4
+ 756 013c 00       		.byte	0
+ 757 013d 08       		.byte	8
+ 758 013e 7F       		.byte	127
+ 759 013f 00       		.byte	0
+ 760 0140 3D       		.byte	61
+ 761 0141 0B       		.byte	11
+ 762 0142 11       		.byte	17
+ 763 0143 23       		.byte	35
+ 764 0144 07       		.byte	7
+ 765 0145 00       		.byte	0
+ 766 0146 2C       		.byte	44
+ 767 0147 0E       		.byte	14
+ 768 0148 0B       		.byte	11
+ 769 0149 04       		.byte	4
+ 770 014a 0C       		.byte	12
+ 771 014b 73       		.byte	115
+ 772 014c 03       		.byte	3
+ 773 014d 10       		.byte	16
+ 774 014e 11       		.byte	17
+ARM GAS  /tmp/cc3YQwNS.s 			page 17
+
+
+ 775 014f 30       		.byte	48
+ 776 0150 0C       		.byte	12
+ 777 0151 00       		.byte	0
+ 778 0152 00       		.byte	0
+ 779 0153 00       		.byte	0
+ 780 0154 00       		.byte	0
+ 781 0155 00       		.byte	0
+ 782 0156 00       		.byte	0
+ 783 0157 00       		.byte	0
+ 784 0158 00       		.byte	0
+ 785 0159 00       		.byte	0
+ 786 015a 00       		.byte	0
+ 787 015b 00       		.byte	0
+ 788 015c 00       		.byte	0
+ 789 015d 00       		.byte	0
+ 790 015e 0C       		.byte	12
+ 791 015f 11       		.byte	17
+ 792 0160 40       		.byte	64
+ 793 0161 08       		.byte	8
+ 794 0162 00       		.byte	0
+ 795 0163 41       		.byte	65
+ 796 0164 0C       		.byte	12
+ 797 0165 EC       		.byte	-20
+ 798 0166 4E       		.byte	78
+ 799 0167 4E       		.byte	78
+ 800 0168 C5       		.byte	-59
+ 801 0169 20       		.byte	32
+ 802 016a FE       		.byte	-2
+ 803 016b 00       		.byte	0
+ 804              		.section	.bss.nsel,"aw",%nobits
+ 805              		.align	1
+ 806              		.set	.LANCHOR0,. + 0
+ 809              	nsel:
+ 810 0000 0000     		.space	2
+ 811              		.section	.bss.nsel_port,"aw",%nobits
+ 812              		.align	2
+ 813              		.set	.LANCHOR1,. + 0
+ 816              	nsel_port:
+ 817 0000 00000000 		.space	4
+ 818              		.section	.bss.spi_handle,"aw",%nobits
+ 819              		.align	2
+ 820              		.set	.LANCHOR2,. + 0
+ 823              	spi_handle:
+ 824 0000 00000000 		.space	4
+ 825              		.text
+ 826              	.Letext0:
+ 827              		.file 2 "/opt/gcc-arm-none-eabi-6-2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include/stddef.h"
+ 828              		.file 3 "/opt/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/machine/_default_types.h"
+ 829              		.file 4 "/opt/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/lock.h"
+ 830              		.file 5 "/opt/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/_types.h"
+ 831              		.file 6 "/opt/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/reent.h"
+ 832              		.file 7 "/opt/gcc-arm-none-eabi-6-2017-q1-update/arm-none-eabi/include/sys/_stdint.h"
+ 833              		.file 8 "Drivers/CMSIS/Include/core_cm3.h"
+ 834              		.file 9 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h"
+ 835              		.file 10 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h"
+ 836              		.file 11 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h"
+ 837              		.file 12 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h"
+ARM GAS  /tmp/cc3YQwNS.s 			page 18
+
+
+ 838              		.file 13 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_dma.h"
+ 839              		.file 14 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h"
+ 840              		.file 15 "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h"
+ARM GAS  /tmp/cc3YQwNS.s 			page 19
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rf.c
+     /tmp/cc3YQwNS.s:16     .text.spi_communicate:0000000000000000 $t
+     /tmp/cc3YQwNS.s:22     .text.spi_communicate:0000000000000000 spi_communicate
+     /tmp/cc3YQwNS.s:141    .text.spi_communicate:0000000000000074 $d
+     /tmp/cc3YQwNS.s:148    .text.rf_init:0000000000000000 $t
+     /tmp/cc3YQwNS.s:155    .text.rf_init:0000000000000000 rf_init
+     /tmp/cc3YQwNS.s:212    .text.rf_init:0000000000000030 $d
+     /tmp/cc3YQwNS.s:220    .text.rf_transmit:0000000000000000 $t
+     /tmp/cc3YQwNS.s:227    .text.rf_transmit:0000000000000000 rf_transmit
+     /tmp/cc3YQwNS.s:363    .text.rf_transmit:000000000000008c $d
+     /tmp/cc3YQwNS.s:369    .text.rf_receive:0000000000000000 $t
+     /tmp/cc3YQwNS.s:376    .text.rf_receive:0000000000000000 rf_receive
+     /tmp/cc3YQwNS.s:432    .text.rf_receive:0000000000000030 $d
+     /tmp/cc3YQwNS.s:805    .bss.nsel:0000000000000000 $d
+     /tmp/cc3YQwNS.s:809    .bss.nsel:0000000000000000 nsel
+     /tmp/cc3YQwNS.s:812    .bss.nsel_port:0000000000000000 $d
+     /tmp/cc3YQwNS.s:816    .bss.nsel_port:0000000000000000 nsel_port
+     /tmp/cc3YQwNS.s:819    .bss.spi_handle:0000000000000000 $d
+     /tmp/cc3YQwNS.s:823    .bss.spi_handle:0000000000000000 spi_handle
+                     .debug_frame:0000000000000010 $d
+
+UNDEFINED SYMBOLS
+HAL_GPIO_WritePin
+HAL_SPI_Transmit
+HAL_SPI_Receive
+memcpy
+memset
+osDelay
