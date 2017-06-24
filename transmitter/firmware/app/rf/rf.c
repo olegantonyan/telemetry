@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "rf/rf.h"
 #include "rf/radio_config_Si4463.h"
 #include "serial_log/serial_log.h"
@@ -27,22 +29,29 @@ bool rf_transmit(const uint8_t *data, size_t length) {
     return false;
   }
 
+  if (length > 64) {
+    return false;
+  }
+
   if (!wait_for_cts()) {
     return false;
   }
-  // TODO initialize tx and write fifo
 
-  return spi_communicate(data, length, NULL, 0);
+  uint8_t cmd[65] = { 0 };
+  memcpy(&cmd[1], data, length);
+  cmd[0] = 0x66;
+
+  return spi_communicate(cmd, length + 1, NULL, 0);
 }
 
 static bool spi_communicate(const uint8_t *write, size_t write_length, uint8_t *read, size_t read_length) {
   const size_t SPI_TIMEOUT = 500;
 
-  // TODO try full duplex HAL_SPI_Transmit_Receive
+  // TODO try full duplex HAL_SPI_TransmitReceive
   nsel_activate();
   HAL_StatusTypeDef write_result = HAL_OK;
   if (write && write_length > 0) {
-    write_result = HAL_SPI_Transmit(spi_handle, (uint8_t *)write, sizeof write_length, SPI_TIMEOUT);
+    write_result = HAL_SPI_Transmit(spi_handle, (uint8_t *)write, write_length, SPI_TIMEOUT);
   }
 
   HAL_StatusTypeDef read_result = HAL_OK;
@@ -65,6 +74,7 @@ static void nsel_deactivate() {
 static bool cts() {
   const uint8_t data[] = { 0x44 };
   uint8_t read_byte = 0;
+  //HAL_SPI_TransmitReceive(spi_handle, (uint8_t *)data, &read_byte, 1, 500);
   if (!spi_communicate(data, sizeof data, &read_byte, sizeof read_byte)) {
     return false;
   }
@@ -72,7 +82,7 @@ static bool cts() {
 }
 
 static bool wait_for_cts() {
-  const size_t MAX_CTS_RETRIES = 100;
+  const size_t MAX_CTS_RETRIES = 10;
   const size_t CTS_RETRY_DELAY = 10;
 
   size_t i = MAX_CTS_RETRIES;
