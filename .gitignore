@@ -1,4 +1,4 @@
 receiver/build/
 receiver/.dep
-transmitter/build
+transmitter/build/
 transmitter/.dep
