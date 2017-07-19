@@ -3,5 +3,7 @@
 
 #include "stm32f1xx_hal.h"
 
+void rf_init();
+void rf_transmit(const uint8_t *data);
 
 #endif

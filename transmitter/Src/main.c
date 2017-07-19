@@ -55,7 +55,6 @@
 #include "adc/adc.h"
 #include "serial_log/serial_log.h"
 #include "rf/rf.h"
-#include "si4463.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -72,7 +71,7 @@ osThreadId defaultTaskHandle;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-si4463_t si4463;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -399,56 +398,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-bool SI4463_IsCTS(void)
-{
-	return HAL_GPIO_ReadPin(SI4463_CTS_GPIO_Port, SI4463_CTS_Pin) == GPIO_PIN_SET;
-}
 
-void SI4463_WriteRead(uint8_t * pTxData, uint8_t * pRxData, uint16_t sizeTxData)
-{
-	HAL_SPI_TransmitReceive(&hspi1, pTxData, pRxData, sizeTxData, 100);
-}
-
-void SI4463_SetShutdown(void)
-{
-	HAL_GPIO_WritePin(SI4463_SHUTDOWN_GPIO_Port, SI4463_SHUTDOWN_Pin, GPIO_PIN_SET);
-}
-
-void SI4463_ClearShutdown(void)
-{
-	HAL_GPIO_WritePin(SI4463_SHUTDOWN_GPIO_Port, SI4463_SHUTDOWN_Pin, GPIO_PIN_RESET);
-}
-
-void SI4463_Select(void)
-{
-	HAL_GPIO_WritePin(SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin, GPIO_PIN_RESET);
-}
-
-void SI4463_Deselect(void)
-{
-	HAL_GPIO_WritePin(SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin, GPIO_PIN_SET);
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(GPIO_Pin);
-
-  SI4463_GetInterrupts(&si4463);
-
-  if (si4463.interrupts.packetSent)
-  {
-	  /* Handling this interrupt here */
-	  /* Clear TX FIFO */
-	  SI4463_ClearTxFifo(&si4463);
-	  /* Re-arm StartRX */
-	  SI4463_StartRx(&si4463, false, false, false);
-	  /* Following instruction only for add breakpoints. May be deleted */
-	  si4463.interrupts.packetSent = false;
-  }
-
-  SI4463_ClearAllInterrupts(&si4463);
-}
 /* USER CODE END 4 */
 
 /* StartDefaultTask function */
@@ -462,31 +412,7 @@ void StartDefaultTask(void const * argument)
   //serial_log_init();
 
   // SI4463
-  si4463.IsCTS = SI4463_IsCTS;
-  si4463.WriteRead = SI4463_WriteRead;
-  si4463.Select = SI4463_Select;
-  si4463.Deselect = SI4463_Deselect;
-  si4463.SetShutdown = SI4463_SetShutdown;
-  si4463.ClearShutdown = SI4463_ClearShutdown;
-  si4463.DelayMs = (void (*)(uint32_t))osDelay;
-  /* Disable interrupt pin for init Si4463 */
-  HAL_NVIC_DisableIRQ(EXTI0_IRQn);
-  /* Init Si4463 with structure */
-  SI4463_Init(&si4463);
-  /* Clear RX FIFO before starting RX packets */
-  SI4463_ClearRxFifo(&si4463);
-  /* Start RX mode.
-   * SI4463_StartRx() put a chip in non-armed mode in cases:
-   * - successfully receive a packet;
-   * - invoked RX_TIMEOUT;
-   * - invalid receive.
-   * For receiveing next packet you have to invoke SI4463_StartRx() again!*/
-  SI4463_StartRx(&si4463, false, false, false);
-  /* Enable interrupt pin and */
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-  /* Clear interrupts after enabling interrupt pin.
-   * Without it may be situation when interrupt is asserted but pin not cleared.*/
-  SI4463_ClearInterrupts(&si4463);
+  rf_init();
   //endof SI4463
 
   /* Infinite loop */
@@ -498,15 +424,8 @@ void StartDefaultTask(void const * argument)
     osDelay(1000);
     HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
 
-    static uint8_t outgoingBuffer[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
-    outgoingBuffer[0] = 'h';
-	  outgoingBuffer[1] = 'e';
-	  outgoingBuffer[2] = 'l';
-	  outgoingBuffer[3] = 'l';
-	  outgoingBuffer[4] = 'o';
-	  outgoingBuffer[5] = '!';
-	  outgoingBuffer[6] = '!';
-	  SI4463_Transmit(&si4463, outgoingBuffer, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    char *buf = "hello";
+    rf_transmit((const uint8_t *)buf);
 
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
