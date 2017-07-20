@@ -15,6 +15,7 @@ static void si4463_set_shutdown(void);
 static void si4463_clear_shutdown(void);
 static void si4463_select(void);
 static void si4463_deselect(void);
+static void fake_delay(uint32_t);
 
 void rf_init() {
   si4463.IsCTS = si4463_cts;
@@ -23,7 +24,7 @@ void rf_init() {
   si4463.Deselect = si4463_deselect;
   si4463.SetShutdown = si4463_set_shutdown;
   si4463.ClearShutdown = si4463_clear_shutdown;
-  si4463.DelayMs = (void (*)(uint32_t))osDelay;
+  si4463.DelayMs = fake_delay;//HAL_Delay;//(void (*)(uint32_t))osDelay;
   /* Disable interrupt pin for init Si4463 */
   HAL_NVIC_DisableIRQ(EXTI0_IRQn);
   /* Init Si4463 with structure */
@@ -70,6 +71,10 @@ static void si4463_select(void) {
 
 static void si4463_deselect(void) {
 	HAL_GPIO_WritePin(SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin, GPIO_PIN_SET);
+}
+
+static void fake_delay(uint32_t ms) {
+  UNUSED(ms);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {

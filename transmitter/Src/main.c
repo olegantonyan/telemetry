@@ -55,6 +55,7 @@
 #include "adc/adc.h"
 #include "serial_log/serial_log.h"
 #include "rf/rf.h"
+#include "core/core.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -125,7 +126,10 @@ int main(void)
   MX_SPI1_Init();
 
   /* USER CODE BEGIN 2 */
-
+  rf_init();
+  adc_init(&hadc1);
+  //serial_log_init();
+  core_init();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -307,7 +311,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -408,24 +412,25 @@ void StartDefaultTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
-  //adc_init(&hadc1);
-  //serial_log_init();
-
-  // SI4463
-  rf_init();
-  //endof SI4463
 
   /* Infinite loop */
-  uint32_t i = 0;
   for(;;)
   {
-    i++;
-    //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    osDelay(1000);
+    osDelay(500);
     HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
 
-    char *buf = "hello";
-    rf_transmit((const uint8_t *)buf);
+    /*uint8_t data[32] = { 0 };
+    ADC_Voltage volts = adc_voltage_read();
+    //volts.integer = 22;
+    //volts.fractional = 1234;
+    data[0] = 'Q';//device_id();
+    data[1] = (uint8_t)volts.integer;
+    data[2] = (uint8_t)(volts.fractional >> 8);
+    data[3] = (uint8_t)volts.fractional;
+    rf_transmit(data);
+*/
+  //  char *buf = "hello";
+  //  rf_transmit((const uint8_t *)buf);
 
     //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
