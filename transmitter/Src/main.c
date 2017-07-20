@@ -128,7 +128,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   rf_init();
   adc_init(&hadc1);
-  //serial_log_init();
+  serial_log_init();
   core_init();
   /* USER CODE END 2 */
 
@@ -414,10 +414,10 @@ void StartDefaultTask(void const * argument)
   /* USER CODE BEGIN 5 */
 
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(500);
+  while(true) {
+    HAL_IWDG_Refresh(&hiwdg);
     HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+    osDelay(300);
 
     /*uint8_t data[32] = { 0 };
     ADC_Voltage volts = adc_voltage_read();

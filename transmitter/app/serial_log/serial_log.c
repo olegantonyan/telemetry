@@ -17,6 +17,7 @@ void serial_log_write(const char *str) {
 }
 
 static void thread(void const *arg) {
+  CDC_Transmit_FS((uint8_t *)"started", strlen("started"));
   while(1) {
     char voltage_string[16] = {0};
     adc_voltage_formatted_string(voltage_string, sizeof voltage_string);
