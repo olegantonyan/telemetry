@@ -3,6 +3,7 @@
 #include "adc/adc.h"
 #include "rf/rf.h"
 #include "cmsis_os.h"
+#include "main.h"
 
 static uint8_t device_id();
 static void thread(void const *arg);
@@ -23,7 +24,11 @@ static void thread(void const *arg) {
     data[2] = (uint8_t)((volts.fractional >> 8) & 0xFF);
     data[3] = (uint8_t)(volts.fractional & 0xFF);
 
+
+    HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
     rf_transmit(data);
+    HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
+
 
     osDelay(20);
   }

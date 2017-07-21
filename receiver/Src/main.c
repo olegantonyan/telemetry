@@ -56,6 +56,7 @@
 #include "serial_log/serial_log.h"
 #include "rf/rf.h"
 #include "core/core.h"
+#include "leds/leds.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -352,8 +353,7 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   while(true) {
     HAL_IWDG_Refresh(&hiwdg);
-    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
-    osDelay(300);
+    osDelay(200);
   }
   /* USER CODE END 5 */ 
 }

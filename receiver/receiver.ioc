@@ -1,8 +1,13 @@
 #MicroXplorer Configuration settings - do not modify
 FREERTOS.FootprintOK=true
 FREERTOS.INCLUDE_xTaskGetCurrentTaskHandle=1
-FREERTOS.IPParameters=Tasks01,INCLUDE_xTaskGetCurrentTaskHandle,FootprintOK
+FREERTOS.IPParameters=Tasks01,INCLUDE_xTaskGetCurrentTaskHandle,FootprintOK,configUSE_TIMERS,configTIMER_TASK_PRIORITY,configTIMER_TASK_STACK_DEPTH,configTIMER_QUEUE_LENGTH,configTOTAL_HEAP_SIZE
 FREERTOS.Tasks01=defaultTask,0,128,StartDefaultTask,Default,NULL
+FREERTOS.configTIMER_QUEUE_LENGTH=10
+FREERTOS.configTIMER_TASK_PRIORITY=2
+FREERTOS.configTIMER_TASK_STACK_DEPTH=256
+FREERTOS.configTOTAL_HEAP_SIZE=8192
+FREERTOS.configUSE_TIMERS=1
 File.Version=6
 KeepUserPlacement=false
 Mcu.Family=STM32F1

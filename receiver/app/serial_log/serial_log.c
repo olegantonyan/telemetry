@@ -11,17 +11,15 @@ void serial_log_init() {
   thread_handle = osThreadCreate(osThread(serial_log_thread), NULL);
 }
 
-static void thread(void const *arg) {
-  //osDelay(500);
+void serial_log_write(const char *str) {
+  CDC_Transmit_FS((uint8_t *)str, strlen(str));
+}
 
+static void thread(void const *arg) {
   while(true) {
-    uint8_t buf[64] = { 0 };
-    if (rf_receive(buf)) {
-      CDC_Transmit_FS(buf, 7);
-    }
 
     //const char *result_string = "hello\n";
     //CDC_Transmit_FS((uint8_t *)result_string, strlen(result_string));
-    //osDelay(500);
+    osDelay(500);
   }
 }

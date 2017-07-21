@@ -416,7 +416,6 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   while(true) {
     HAL_IWDG_Refresh(&hiwdg);
-    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
     osDelay(300);
 
     /*uint8_t data[32] = { 0 };
