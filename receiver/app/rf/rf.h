@@ -3,8 +3,8 @@
 
 #include "stm32f1xx_hal.h"
 
-bool rf_init(SPI_HandleTypeDef *spi, GPIO_TypeDef *gpio_port, uint16_t nsel_pin);
-bool rf_transmit(const uint8_t * data, size_t length);
-bool rf_receive(uint8_t *data, size_t length);
+void rf_init();
+void rf_transmit(const uint8_t *data);
+bool rf_receive(uint8_t * data);
 
 #endif

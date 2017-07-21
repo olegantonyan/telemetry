@@ -55,6 +55,7 @@
 #include "usbd_cdc_if.h"
 #include "serial_log/serial_log.h"
 #include "rf/rf.h"
+#include "core/core.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -118,7 +119,9 @@ int main(void)
   MX_SPI1_Init();
 
   /* USER CODE BEGIN 2 */
-
+  rf_init();
+  serial_log_init();
+  core_init();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -259,7 +262,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -293,6 +296,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SI4463_SHUTDOWN_GPIO_Port, SI4463_SHUTDOWN_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : RED_LED_Pin */
@@ -300,6 +306,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(RED_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SI4463_CTS_Pin */
+  GPIO_InitStruct.Pin = SI4463_CTS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(SI4463_CTS_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SI4463_SHUTDOWN_Pin */
+  GPIO_InitStruct.Pin = SI4463_SHUTDOWN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SI4463_SHUTDOWN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SI4463_IRQ_Pin */
   GPIO_InitStruct.Pin = SI4463_IRQ_Pin;
@@ -312,6 +330,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SI4463_nSEL_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 }
 
@@ -326,24 +348,12 @@ void StartDefaultTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
-  //serial_log_init();
-  rf_init(&hspi1, SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin);
 
   /* Infinite loop */
-  for(;;)
-  {
-
-    //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-    osDelay(1000);
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-    //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-
-    uint8_t data[64] = { 0 };
-    if (rf_receive(data, sizeof data)) {
-      CDC_Transmit_FS((uint8_t *)data, sizeof data);
-      osDelay(500);
-    }
-
+  while(true) {
+    HAL_IWDG_Refresh(&hiwdg);
+    HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
+    osDelay(300);
   }
   /* USER CODE END 5 */ 
 }

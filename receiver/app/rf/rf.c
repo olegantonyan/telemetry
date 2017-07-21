@@ -1,94 +1,127 @@
 #include <string.h>
 
 #include "rf/rf.h"
-#include "rf/radio_config_Si4463.h"
 #include "serial_log/serial_log.h"
 #include "cmsis_os.h"
+#include "si4463.h"
+#include "main.h"
 
-static SPI_HandleTypeDef *spi_handle = NULL;
-static GPIO_TypeDef *nsel_port = NULL;
-static uint16_t nsel = 0;
+static si4463_t si4463;
+extern SPI_HandleTypeDef hspi1;
 
-static void nsel_activate();
-static void nsel_deactivate();
-static bool spi_communicate(const uint8_t *write, size_t write_length, uint8_t *read, size_t read_length);
-static bool cts();
-static bool wait_for_cts();
+osMessageQDef(rx_queue, 1, uint8_t *);
+osMessageQId rx_queue;
 
-bool rf_init(SPI_HandleTypeDef *spi, GPIO_TypeDef *nsel_gpio, uint16_t nsel_pin) {
-  spi_handle = spi;
-  nsel_port = nsel_gpio;
-  nsel = nsel_pin;
+static bool si4463_cts(void);
+static void si4463_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
+static void si4463_set_shutdown(void);
+static void si4463_clear_shutdown(void);
+static void si4463_select(void);
+static void si4463_deselect(void);
+static void fake_delay(uint32_t);
 
-  uint8_t init_sequence[] = RADIO_CONFIGURATION_DATA_ARRAY;
-  return spi_communicate(init_sequence, sizeof init_sequence, NULL, 0);
+void rf_init() {
+  si4463.IsCTS = si4463_cts;
+  si4463.WriteRead = si4463_write_read;
+  si4463.Select = si4463_select;
+  si4463.Deselect = si4463_deselect;
+  si4463.SetShutdown = si4463_set_shutdown;
+  si4463.ClearShutdown = si4463_clear_shutdown;
+  si4463.DelayMs = fake_delay;//HAL_Delay;//(void (*)(uint32_t))osDelay;
+  /* Disable interrupt pin for init Si4463 */
+  HAL_NVIC_DisableIRQ(EXTI0_IRQn);
+  /* Init Si4463 with structure */
+  SI4463_Init(&si4463);
+  /* Clear RX FIFO before starting RX packets */
+  SI4463_ClearRxFifo(&si4463);
+  /* Start RX mode.
+   * SI4463_StartRx() put a chip in non-armed mode in cases:
+   * - successfully receive a packet;
+   * - invoked RX_TIMEOUT;
+   * - invalid receive.
+   * For receiveing next packet you have to invoke SI4463_StartRx() again!*/
+  SI4463_StartRx(&si4463, false, false, false);
+  /* Enable interrupt pin and */
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  /* Clear interrupts after enabling interrupt pin.
+   * Without it may be situation when interrupt is asserted but pin not cleared.*/
+  SI4463_ClearInterrupts(&si4463);
+
+  rx_queue = osMessageCreate(osMessageQ(rx_queue), NULL);
 }
 
-bool rf_transmit(const uint8_t *data, size_t length) {
-  if (!spi_handle || !nsel_port || length == 0 || length > 64 || !wait_for_cts()) {
-    return false;
+bool rf_receive(uint8_t * data) {
+  osEvent evt = osMessageGet(rx_queue, osWaitForever);
+  if (evt.status == osEventMessage) {
+    uint8_t *m = (uint8_t *)evt.value.p;
+    memcpy(data, m, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    return true;
+  }
+  return false;
+}
+
+void rf_transmit(const uint8_t *data) {
+  SI4463_Transmit(&si4463, (uint8_t *)data, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+}
+
+static bool si4463_cts(void) {
+	return HAL_GPIO_ReadPin(SI4463_CTS_GPIO_Port, SI4463_CTS_Pin) == GPIO_PIN_SET;
+}
+
+static void si4463_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t length) {
+	HAL_SPI_TransmitReceive(&hspi1, tx_data, rx_data, length, 100);
+}
+
+static void si4463_set_shutdown(void) {
+	HAL_GPIO_WritePin(SI4463_SHUTDOWN_GPIO_Port, SI4463_SHUTDOWN_Pin, GPIO_PIN_SET);
+}
+
+static void si4463_clear_shutdown(void) {
+	HAL_GPIO_WritePin(SI4463_SHUTDOWN_GPIO_Port, SI4463_SHUTDOWN_Pin, GPIO_PIN_RESET);
+}
+
+static void si4463_select(void) {
+	HAL_GPIO_WritePin(SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin, GPIO_PIN_RESET);
+}
+
+static void si4463_deselect(void) {
+	HAL_GPIO_WritePin(SI4463_nSEL_GPIO_Port, SI4463_nSEL_Pin, GPIO_PIN_SET);
+}
+
+static void fake_delay(uint32_t ms) {
+  UNUSED(ms);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(GPIO_Pin);
+
+  SI4463_GetInterrupts(&si4463);
+
+  if (si4463.interrupts.packetSent) {
+	  /* Handling this interrupt here */
+	  /* Clear TX FIFO */
+	  SI4463_ClearTxFifo(&si4463);
+	  /* Re-arm StartRX */
+	  SI4463_StartRx(&si4463, false, false, false);
+  }
+  if (si4463.interrupts.packetRx) {
+    static uint8_t buf[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH] = { 0 };
+	  /* Handling this interrupt here */
+	  /* Get FIFO data */
+	  SI4463_ReadRxFifo(&si4463, buf, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+
+    osMessagePut(rx_queue, (uint32_t)buf, osWaitForever);
+
+	  /* Clear RX FIFO */
+	  SI4463_ClearRxFifo(&si4463);
+
+	  /* Start RX again.
+	   * It need because after successful receive a packet the chip change
+	   * state to READY.
+	   * There is re-armed mode for StartRx but it not correctly working */
+	  SI4463_StartRx(&si4463, false, false, false);
   }
 
-  uint8_t cmd[65] = { 0 };
-  memcpy(&cmd[1], data, length);
-  cmd[0] = 0x66;
-
-  return spi_communicate(cmd, length + 1, NULL, 0);
-}
-
-bool rf_receive(uint8_t *data, size_t length) {
-  if (!spi_handle || !nsel_port ||  length == 0 || length > 64) {
-    return false;
-  }
-
-  uint8_t cmd[] = { 0x77 };
-  return spi_communicate(cmd, sizeof cmd, data, length);
-}
-
-static bool spi_communicate(const uint8_t *write, size_t write_length, uint8_t *read, size_t read_length) {
-  const size_t SPI_TIMEOUT = 500;
-
-  // TODO try full duplex HAL_SPI_TransmitReceive
-  nsel_activate();
-  HAL_StatusTypeDef write_result = HAL_OK;
-  if (write && write_length > 0) {
-    write_result = HAL_SPI_Transmit(spi_handle, (uint8_t *)write, write_length, SPI_TIMEOUT);
-  }
-
-  HAL_StatusTypeDef read_result = HAL_OK;
-  if (read && read_length > 0) {
-    read_result = HAL_SPI_Receive(spi_handle, read, read_length, SPI_TIMEOUT);
-  }
-  nsel_deactivate();
-
-  return write_result == HAL_OK && read_result == HAL_OK;
-}
-
-static void nsel_activate() {
-  HAL_GPIO_WritePin(nsel_port, nsel, GPIO_PIN_RESET);
-}
-
-static void nsel_deactivate() {
-  HAL_GPIO_WritePin(nsel_port, nsel, GPIO_PIN_SET);
-}
-
-static bool cts() {
-  const uint8_t data[] = { 0x44 };
-  uint8_t read_byte = 0;
-  //HAL_SPI_TransmitReceive(spi_handle, (uint8_t *)data, &read_byte, 1, 500);
-  if (!spi_communicate(data, sizeof data, &read_byte, sizeof read_byte)) {
-    return false;
-  }
-  return read_byte == 0xFF;
-}
-
-static bool wait_for_cts() {
-  const size_t MAX_CTS_RETRIES = 10;
-  const size_t CTS_RETRY_DELAY = 10;
-
-  size_t i = MAX_CTS_RETRIES;
-  while (!cts() && i-- > 0) {
-    osDelay(CTS_RETRY_DELAY);
-  }
-  return i > 0;
+  SI4463_ClearAllInterrupts(&si4463);
 }
