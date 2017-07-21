@@ -11,6 +11,8 @@ extern SPI_HandleTypeDef hspi1;
 
 osMessageQDef(rx_queue, 1, uint8_t *);
 osMessageQId rx_queue;
+osMutexId rx_buffer_mutex;
+osMutexDef(rx_buffer_mutex);
 
 static bool si4463_cts(void);
 static void si4463_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
@@ -48,13 +50,15 @@ void rf_init() {
   SI4463_ClearInterrupts(&si4463);
 
   rx_queue = osMessageCreate(osMessageQ(rx_queue), NULL);
+  rx_buffer_mutex = osMutexCreate(osMutex(rx_buffer_mutex));
 }
 
 bool rf_receive(uint8_t * data) {
   osEvent evt = osMessageGet(rx_queue, osWaitForever);
   if (evt.status == osEventMessage) {
-    uint8_t *m = (uint8_t *)evt.value.p;
-    memcpy(data, m, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    osMutexWait(rx_buffer_mutex, osWaitForever);
+    memcpy(data, evt.value.p, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    osMutexRelease(rx_buffer_mutex);
     return true;
   }
   return false;
@@ -109,9 +113,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     static uint8_t buf[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH] = { 0 };
 	  /* Handling this interrupt here */
 	  /* Get FIFO data */
+    osMutexWait(rx_buffer_mutex, osWaitForever);
 	  SI4463_ReadRxFifo(&si4463, buf, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    osMutexRelease(rx_buffer_mutex);
 
-    osMessagePut(rx_queue, (uint32_t)buf, osWaitForever);
+    osMessagePut(rx_queue, (uint32_t)buf, 0);
 
 	  /* Clear RX FIFO */
 	  SI4463_ClearRxFifo(&si4463);
