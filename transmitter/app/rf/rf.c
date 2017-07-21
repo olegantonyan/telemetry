@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "stm32f1xx_hal.h"
 #include "rf/rf.h"
 #include "serial_log/serial_log.h"
 #include "cmsis_os.h"
@@ -8,6 +9,9 @@
 
 static si4463_t si4463;
 extern SPI_HandleTypeDef hspi1;
+
+static osSemaphoreId tx_semaphore;
+osSemaphoreDef(tx_semaphore);
 
 static bool si4463_cts(void);
 static void si4463_write_read(uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
@@ -43,9 +47,12 @@ void rf_init() {
   /* Clear interrupts after enabling interrupt pin.
    * Without it may be situation when interrupt is asserted but pin not cleared.*/
   SI4463_ClearInterrupts(&si4463);
+
+  tx_semaphore = osSemaphoreCreate(osSemaphore(tx_semaphore), 1);
 }
 
 void rf_transmit(const uint8_t *data) {
+  osSemaphoreWait(tx_semaphore, osWaitForever);
   SI4463_Transmit(&si4463, (uint8_t *)data, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
 }
 
@@ -89,6 +96,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	  SI4463_ClearTxFifo(&si4463);
 	  /* Re-arm StartRX */
 	  SI4463_StartRx(&si4463, false, false, false);
+
+    osSemaphoreRelease(tx_semaphore);
   }
 
   SI4463_ClearAllInterrupts(&si4463);

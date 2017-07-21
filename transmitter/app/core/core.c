@@ -25,7 +25,7 @@ static void thread(void const *arg) {
 
     rf_transmit(data);
 
-    osDelay(150);
+    osDelay(20);
   }
 }
 

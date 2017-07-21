@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "stm32f1xx_hal.h"
 #include "rf/rf.h"
 #include "serial_log/serial_log.h"
 #include "cmsis_os.h"
@@ -9,9 +10,9 @@
 static si4463_t si4463;
 extern SPI_HandleTypeDef hspi1;
 
+static osMessageQId rx_queue;
 osMessageQDef(rx_queue, 1, uint8_t *);
-osMessageQId rx_queue;
-osMutexId rx_buffer_mutex;
+static osMutexId rx_buffer_mutex;
 osMutexDef(rx_buffer_mutex);
 
 static bool si4463_cts(void);
