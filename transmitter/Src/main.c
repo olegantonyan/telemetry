@@ -128,8 +128,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   rf_init();
   adc_init(&hadc1);
-  serial_log_init();
   core_init();
+  serial_log_init();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */

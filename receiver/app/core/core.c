@@ -12,7 +12,7 @@ void core_init() {
 }
 
 static void thread(void const *arg) {
-  while(1) {
+  while(true) {
 
 
     osDelay(400);

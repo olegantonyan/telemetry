@@ -12,6 +12,8 @@ void serial_log_init() {
 }
 
 static void thread(void const *arg) {
+  //osDelay(500);
+
   while(true) {
     uint8_t buf[64] = { 0 };
     if (rf_receive(buf)) {
