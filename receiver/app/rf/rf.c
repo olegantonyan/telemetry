@@ -111,10 +111,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	  SI4463_StartRx(&si4463, false, false, false);
   }
   if (si4463.interrupts.packetRx) {
+    /* Handling this interrupt here */
+
     if (!si4463.interrupts.crcError) {
-      static uint8_t buf[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH] = { 0 };
-      /* Handling this interrupt here */
       /* Get FIFO data */
+      static uint8_t buf[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH] = { 0 };
       osMutexWait(rx_buffer_mutex, osWaitForever);
       SI4463_ReadRxFifo(&si4463, buf, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
       osMutexRelease(rx_buffer_mutex);
