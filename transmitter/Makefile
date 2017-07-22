@@ -42,7 +42,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES += $(shell find Drivers/STM32F1xx_HAL_Driver/Src/ -type f -iname '*.c')
 C_SOURCES += $(shell find Drivers/CMSIS/Device/ST/STM32F1xx/Source/Templates/ -type f -iname '*.c')
-C_SOURCES += $(shell find ../shared/driver_si4463/ -type f -iname '*.c')
+C_SOURCES += $(shell find ../shared/ -type f -iname '*.c')
 C_SOURCES += $(shell find Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src -type f -iname '*.c')
 C_SOURCES += $(shell find Middlewares/ST/STM32_USB_Device_Library/Core/Src -type f -iname '*.c')
 C_SOURCES += $(shell find Middlewares/Third_Party/FreeRTOS/Source/ -type f -iname '*.c')
@@ -106,7 +106,7 @@ AS_INCLUDES =  \
 C_INCLUDES += -IDrivers/CMSIS/Include
 C_INCLUDES += -IDrivers/CMSIS/Device/ST/STM32F1xx/Include
 C_INCLUDES += -IDrivers/STM32F1xx_HAL_Driver/Inc
-C_INCLUDES += -I../shared/driver_si4463
+C_INCLUDES += -I../shared/
 C_INCLUDES += -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc/
 C_INCLUDES += -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/
 C_INCLUDES += -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/
