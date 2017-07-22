@@ -33,6 +33,9 @@ int _write(int file, char *data, int len) {
         errno = EBADF;
         return -1;
     }
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 
     if (HAL_UART_Transmit(&huart1, (uint8_t *)data, len, 100) != HAL_OK) {
       return -1;
