@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "usbd_cdc_if.h"
 #include "cmsis_os.h"
 
@@ -12,10 +14,12 @@ void serial_log_init() {
 }
 
 void serial_log_write(const char *str) {
-  CDC_Transmit_FS((uint8_t *)str, strlen(str));
+  //CDC_Transmit_FS((uint8_t *)str, strlen(str));
+  printf(str);
 }
 
 static void thread(void const *arg) {
+  printf("started!\n");
   while(true) {
 
     //const char *result_string = "hello\n";
