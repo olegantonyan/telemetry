@@ -16,7 +16,7 @@ void core_init() {
 }
 
 static void thread(void const *arg) {
-  serial_log_write("core start");
+  serial_log_write("core start\n");
   while(true) {
 
     uint8_t buf[64] = { 0 };

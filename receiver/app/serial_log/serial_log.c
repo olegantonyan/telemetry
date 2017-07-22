@@ -19,7 +19,6 @@ void serial_log_write(const char *str) {
 }
 
 static void thread(void const *arg) {
-  printf("started!\n");
   while(true) {
 
     //const char *result_string = "hello\n";
