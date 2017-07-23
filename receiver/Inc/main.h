@@ -73,6 +73,10 @@
 #define SI4463_IRQ_EXTI_IRQn EXTI0_IRQn
 #define SI4463_nSEL_Pin GPIO_PIN_1
 #define SI4463_nSEL_GPIO_Port GPIOB
+#define OLED_I2C_SCL_Pin GPIO_PIN_6
+#define OLED_I2C_SCL_GPIO_Port GPIOB
+#define OLED_I2C_SDA_Pin GPIO_PIN_7
+#define OLED_I2C_SDA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
