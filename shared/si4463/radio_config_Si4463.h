@@ -33,7 +33,7 @@
 // CONFIGURATION PARAMETERS
 #define RADIO_CONFIGURATION_DATA_RADIO_XO_FREQ                     26000000L
 #define RADIO_CONFIGURATION_DATA_CHANNEL_NUMBER                    0x00
-#define RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH               0x0F
+#define RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH               0x10
 #define RADIO_CONFIGURATION_DATA_RADIO_STATE_AFTER_POWER_UP        0x03
 #define RADIO_CONFIGURATION_DATA_RADIO_DELAY_CNT_AFTER_RESET       0xF000
 
@@ -152,7 +152,7 @@
 //   PKT_WHT_BIT_NUM - Selects which bit of the LFSR (used to generate the PN / data whitening sequence) is used as the output bit for data scrambling.
 //   PKT_CONFIG1 - General configuration bits for transmission or reception of a packet.
 */
-#define RF_PKT_CRC_CONFIG_7 0x11, 0x12, 0x07, 0x00, 0x86, 0x01, 0x08, 0xFF, 0xFF, 0x00, 0x02
+#define RF_PKT_CRC_CONFIG_7 0x11, 0x12, 0x07, 0x00, 0x80, 0x01, 0x08, 0xFF, 0xFF, 0x00, 0x02
 
 /*
 // Set properties:           RF_PKT_LEN_12
@@ -174,7 +174,7 @@
 //   PKT_FIELD_2_LENGTH_7_0 - Unsigned 13-bit Field 2 length value.
 //   PKT_FIELD_2_CONFIG - General data processing and packet configuration bits for Field 2.
 */
-#define RF_PKT_LEN_12 0x11, 0x12, 0x0C, 0x08, 0x00, 0x00, 0x00, 0x30, 0x30, 0x00, 0x10, 0x04, 0xAA, 0x00, 0x00, 0x00
+#define RF_PKT_LEN_12 0x11, 0x12, 0x0C, 0x08, 0x00, 0x00, 0x00, 0x30, 0x30, 0x00, 0x10, 0x04, 0x00, 0x00, 0x00, 0x00
 
 /*
 // Set properties:           RF_PKT_FIELD_2_CRC_CONFIG_12
