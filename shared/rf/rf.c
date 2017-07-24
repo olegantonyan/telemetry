@@ -6,6 +6,11 @@
 #include "si4463/si4463.h"
 #include "main.h"
 
+#define RF_PACKET_LENGTH (RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH - 4) // 4 bytes for software CRC
+#if (RF_PACKET_LENGTH % 4 != 0)
+  #error "RF_PACKET_LENGTH must be 4 bytes aligned"
+#endif
+
 static si4463_t si4463;
 extern SPI_HandleTypeDef hspi1;
 extern CRC_HandleTypeDef hcrc;
