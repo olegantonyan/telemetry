@@ -56,8 +56,7 @@
 #include "serial_log/serial_log.h"
 #include "rf/rf.h"
 #include "core/core.h"
-#include "leds/leds.h"
-#include "sh1106.h"
+#include "gui/gui.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -132,6 +131,7 @@ int main(void)
   rf_init();
   serial_log_init();
   core_init();
+  gui_init();
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -397,18 +397,6 @@ void StartDefaultTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
-  sh1106_init(&hi2c1);
-  HAL_IWDG_Refresh(&hiwdg);
-  
-  SH1106_Pixel pixel;
-
-  pixel.x = 0;
-  pixel.y = 0;
-  pixel.value = 1;
-  sh1106_write(pixel);
-
-
-  sh1106_refresh();
 
   /* Infinite loop */
   while(true) {

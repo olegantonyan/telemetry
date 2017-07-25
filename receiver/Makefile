@@ -47,6 +47,7 @@ C_SOURCES += $(shell find ../shared/ -type f -iname '*.c')
 C_SOURCES += $(shell find Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src -type f -iname '*.c')
 C_SOURCES += $(shell find Middlewares/ST/STM32_USB_Device_Library/Core/Src -type f -iname '*.c')
 C_SOURCES += $(shell find Middlewares/Third_Party/FreeRTOS/Source/ -type f -iname '*.c')
+C_SOURCES += $(shell find Middlewares/ui/ -type f -iname '*.c')
 C_SOURCES += $(shell find Src/ -type f -iname '*.c')
 C_SOURCES += $(shell find app/ -type f -iname '*.c')
 
@@ -114,6 +115,7 @@ C_INCLUDES += -IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc/
 C_INCLUDES += -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/
 C_INCLUDES += -IMiddlewares/Third_Party/FreeRTOS/Source/include/
 C_INCLUDES += -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3/
+C_INCLUDES += -IMiddlewares/Third_Partyui
 C_INCLUDES += -IInc
 C_INCLUDES += -Iapp
 

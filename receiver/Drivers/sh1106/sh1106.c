@@ -5,6 +5,9 @@
 static I2C_HandleTypeDef *i2c = NULL;
 static uint8_t buffer[128 * 64 / 8] = { 0 };
 
+static const uint8_t SH1106_I2C_ADDRESS = 0x78;
+static const uint8_t I2C_TIMEOUT = 10;
+
 static void init();
 static void send_command(uint8_t cmd);
 static void send_data(uint8_t data);
@@ -17,21 +20,19 @@ void sh1106_init(I2C_HandleTypeDef *i2c_handle) {
   clear();
 }
 
-void sh1106_write(SH1106_Pixel pixel) {
+void sh1106_set_pixel(uint16_t x, uint16_t y, uint8_t value) {
   /*
   buffer[i] => column, i bits => rows
   buffer[0] => first column, 0x1 => top left pixel
   */
-  uint16_t x = pixel.x;
-  uint16_t y = pixel.y;
-  if (pixel.value == 0x01) {
+  if (value != 0) {
     buffer[x + (y / 8) * 128] |=  (1 << (y & 7));
   } else {
     buffer[x + (y / 8) * 128] &=  ~(1 << (y & 7));
   }
 }
 
-void sh1106_refresh() {
+void sh1106_render() {
   refresh();
 }
 
@@ -103,10 +104,10 @@ static void refresh() {
 
 static void send_command(uint8_t cmd) {
   uint8_t buf[] = { 0x80, cmd };
-  HAL_I2C_Master_Transmit(i2c, 0x78, buf, sizeof buf, 100);
+  HAL_I2C_Master_Transmit(i2c, SH1106_I2C_ADDRESS, buf, sizeof buf, I2C_TIMEOUT);
 }
 
 static void send_data(uint8_t data) {
   uint8_t buf[] = { 0x40, data };
-  HAL_I2C_Master_Transmit(i2c, 0x78, buf, sizeof buf, 100);
+  HAL_I2C_Master_Transmit(i2c, SH1106_I2C_ADDRESS, buf, sizeof buf, I2C_TIMEOUT);
 }
