@@ -19,13 +19,32 @@ void gui_init() {
 static void thread(void const *arg) {
   sh1106_init(&hi2c1, &wdt_kick);
 
-  uint16_t i = 0;
-  uint16_t state = 1;
+  sh1106_draw_character('0', 0, 0);
+
+  //sh1106_draw_rectangle( 4, 4, 30, 0);
+
+  /*sh1106_draw_character(0xff, 26, 0);
+
+  sh1106_draw_character(0xff, 52, 0);
+
+  sh1106_draw_character(0xff, 78, 0);
+
+  sh1106_draw_character(0xff, 104, 0);*/
+
+  sh1106_draw_character('0', 0, 33);
+
+  sh1106_draw_character('1', 26, 33);
+  sh1106_draw_character('2', 52, 33);
+  sh1106_draw_character('3', 78, 33);
+  sh1106_draw_character('4', 104, 33);
+
+  //uint16_t i = 0;
+  //uint16_t state = 1;
   while(true) {
-    sh1106_set_pixel(i, 0, state);
+    //sh1106_set_pixel(i, 0, state);
     sh1106_render();
 
-    if(i++ >= 127) {
+    /*if(i++ >= 127) {
       i = 0;
       if (state == 1) {
         state = 0;
@@ -33,7 +52,7 @@ static void thread(void const *arg) {
         state = 1;
       }
 
-    }
+    }*/
 
     osDelay(30);
   }

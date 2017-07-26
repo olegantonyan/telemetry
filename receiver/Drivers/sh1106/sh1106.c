@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "sh1106.h"
+#include "fonts.h"
 
 static I2C_HandleTypeDef *i2c = NULL;
 static void (*watchdog_kick_function)(void) = NULL;
@@ -31,6 +32,27 @@ void sh1106_set_pixel(uint16_t x, uint16_t y, uint8_t value) {
     buffer[x + (y / 8) * 128] |=  (1 << (y & 7));
   } else {
     buffer[x + (y / 8) * 128] &=  ~(1 << (y & 7));
+  }
+}
+
+void sh1106_draw_character(char character, uint16_t x_offset, uint16_t y_offset) {
+  const uint8_t *font = sh1106_font(character);
+  if (!font) {
+    return;
+  }
+  for (uint8_t y = 0; y < 30; y++) {
+    for (uint8_t x = 0; x < 24; x++) {
+      uint8_t value = font[x / 8 + y * 3] >> (7 - x % 8);
+      sh1106_set_pixel(x_offset + x, y_offset + y, value & 0x01);
+    }
+  }
+}
+
+void sh1106_draw_rectangle(uint8_t x_size, uint8_t y_size, uint16_t x_offset, uint16_t y_offset) {
+  for (uint8_t x = 0; x < x_size; x++) {
+    for (uint8_t y = 0; y < y_size; y++) {
+      sh1106_set_pixel(x_offset + x, y_offset + y, 1);
+    }
   }
 }
 
