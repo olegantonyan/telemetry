@@ -19,7 +19,10 @@ void gui_init() {
 static void thread(void const *arg) {
   sh1106_init(&hi2c1, &wdt_kick);
 
-  sh1106_draw_character('0', 0, 0);
+  sh1106_draw_character('4', 0, 0);
+  sh1106_draw_character('5', 26, 0);
+  sh1106_draw_character('6', 52, 0);
+  sh1106_draw_character('7', 52, 0);
 
   //sh1106_draw_rectangle( 4, 4, 30, 0);
 
@@ -36,7 +39,7 @@ static void thread(void const *arg) {
   sh1106_draw_character('1', 26, 33);
   sh1106_draw_character('2', 52, 33);
   sh1106_draw_character('3', 78, 33);
-  sh1106_draw_character('4', 104, 33);
+
 
   //uint16_t i = 0;
   //uint16_t state = 1;
