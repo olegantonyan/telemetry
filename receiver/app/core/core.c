@@ -22,7 +22,7 @@ static void thread(void const *arg) {
   while(true) {
 
     uint8_t buf[64] = { 0 };
-    if (rf_receive(buf, 500)) {
+    if (rf_receive(buf, 300)) {
       leds_status_flash(200);
 
       uint8_t voltage_integer = buf[1];
