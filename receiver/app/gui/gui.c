@@ -22,7 +22,7 @@ static void thread(void const *arg) {
   sh1106_draw_character('4', 0, 0);
   sh1106_draw_character('5', 26, 0);
   sh1106_draw_character('6', 52, 0);
-  sh1106_draw_character('7', 52, 0);
+  sh1106_draw_character('7', 78, 0);
 
   //sh1106_draw_rectangle( 4, 4, 30, 0);
 
