@@ -56,6 +56,19 @@ void sh1106_draw_rectangle(uint8_t x_size, uint8_t y_size, uint16_t x_offset, ui
   }
 }
 
+void sh1106_draw_string(const char *string, uint16_t x_offset, uint16_t y_offset) {
+  char c;
+  while ((c = *string++) != '\0') {
+    if (c == '.') {
+      sh1106_draw_rectangle(5, 5, x_offset + 1, y_offset + 25);
+      x_offset += 8;
+    } else {
+      sh1106_draw_character(c, x_offset, y_offset);
+      x_offset += 26;
+    }
+  }
+}
+
 void sh1106_render() {
   refresh();
 }

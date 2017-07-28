@@ -74,8 +74,11 @@ void rf_transmit(const uint8_t *data) {
   SI4463_Transmit(&si4463, buf, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
 }
 
-bool rf_receive(uint8_t * data) {
-  osEvent evt = osMessageGet(rx_queue, osWaitForever);
+bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
+  if (timeout_ms == 0) {
+    timeout_ms = osWaitForever;
+  }
+  osEvent evt = osMessageGet(rx_queue, timeout_ms);
   if (evt.status == osEventMessage) {
     osMutexWait(rx_buffer_mutex, osWaitForever);
     memcpy(data, evt.value.p, RF_PACKET_LENGTH);
