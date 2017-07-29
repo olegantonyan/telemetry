@@ -59,13 +59,13 @@
     <tbpRfParameters Type="System.Windows.Forms.TabPage">
       <grbRfParameters Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbModulationType">
-          <SelectedIndex>2</SelectedIndex>
+          <SelectedIndex>1</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDataRate">
           <Value>20.000</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDeviation">
-          <Value>20</Value>
+          <Value>30</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.CheckBox" Name="chbManualRxBandwidth">
           <Checked>False</Checked>
@@ -166,7 +166,7 @@
           </tbpGeneralCrcConfig>
           <tbpGeneralDataWhiteningConfiguration Type="System.Windows.Forms.TabPage">
             <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbDataWhiteningPolynomial">
-              <SelectedIndex>1</SelectedIndex>
+              <SelectedIndex>0</SelectedIndex>
             </DataItem>
             <DataItem Type="System.Windows.Forms.MaskedTextBox" Name="mtbDataWhiteningSeed">
               <Text>FF FF</Text>
