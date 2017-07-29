@@ -62,7 +62,7 @@
           <SelectedIndex>2</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDataRate">
-          <Value>15</Value>
+          <Value>20.000</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDeviation">
           <Value>20</Value>

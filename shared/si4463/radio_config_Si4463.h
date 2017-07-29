@@ -20,13 +20,13 @@
 // INPUT DATA
 /*
 // Crys_freq(Hz): 26000000    Crys_tol(ppm): 20    IF_mode: 2    High_perf_Ch_Fil: 1    OSRtune: 0    Ch_Fil_Bw_AFC: 0    ANT_DIV: 0    PM_pattern: 0    
-// MOD_type: 3    Rsymb(sps): 15000    Fdev(Hz): 20000    RXBW(Hz): 150000    Manchester: 0    AFC_en: 0    Rsymb_error: 0.0    Chip-Version: 2    
+// MOD_type: 3    Rsymb(sps): 20000    Fdev(Hz): 20000    RXBW(Hz): 150000    Manchester: 0    AFC_en: 0    Rsymb_error: 0.0    Chip-Version: 2    
 // RF Freq.(MHz): 435    API_TC: 29    fhst: 500000    inputBW: 0    BERT: 0    RAW_dout: 0    D_source: 0    Hi_pfm_div: 1    
 // 
 // # RX IF frequency is  -406250 Hz
 // # WB filter 2 (BW =  89.32 kHz);  NB-filter 2 (BW = 89.32 kHz)
 // 
-// Modulation index: 2,667
+// Modulation index: 2
 */
 
 
@@ -259,7 +259,7 @@
 //   MODEM_FREQ_DEV_2 - 17-bit unsigned TX frequency deviation word.
 //   MODEM_FREQ_DEV_1 - 17-bit unsigned TX frequency deviation word.
 */
-#define RF_MODEM_MOD_TYPE_12 0x11, 0x20, 0x0C, 0x00, 0x03, 0x00, 0x07, 0x09, 0x27, 0xC0, 0x05, 0x8C, 0xBA, 0x80, 0x00, 0x06
+#define RF_MODEM_MOD_TYPE_12 0x11, 0x20, 0x0C, 0x00, 0x03, 0x00, 0x07, 0x0C, 0x35, 0x00, 0x05, 0x8C, 0xBA, 0x80, 0x00, 0x06
 
 /*
 // Set properties:           RF_MODEM_FREQ_DEV_0_1
@@ -307,7 +307,7 @@
 //   MODEM_BCR_GEAR - RX BCR loop gear control.
 //   MODEM_BCR_MISC1 - Miscellaneous control bits for the RX BCR loop.
 */
-#define RF_MODEM_BCR_OSR_1_9 0x11, 0x20, 0x09, 0x22, 0x00, 0xD9, 0x02, 0x5C, 0xF3, 0x01, 0x2E, 0x02, 0xC2
+#define RF_MODEM_BCR_OSR_1_9 0x11, 0x20, 0x09, 0x22, 0x00, 0xA3, 0x03, 0x26, 0x99, 0x01, 0x92, 0x02, 0xC2
 
 /*
 // Set properties:           RF_MODEM_AFC_GEAR_7
@@ -324,7 +324,7 @@
 //   MODEM_AFC_LIMITER_0 - Set the AFC limiter value.
 //   MODEM_AFC_MISC - Specifies miscellaneous AFC control bits.
 */
-#define RF_MODEM_AFC_GEAR_7 0x11, 0x20, 0x07, 0x2C, 0x04, 0x36, 0x80, 0x32, 0x0B, 0x93, 0x80
+#define RF_MODEM_AFC_GEAR_7 0x11, 0x20, 0x07, 0x2C, 0x04, 0x36, 0x80, 0x43, 0x08, 0xA3, 0x80
 
 /*
 // Set properties:           RF_MODEM_AGC_CONTROL_1
@@ -354,7 +354,7 @@
 //   MODEM_FSK4_MAP - 4(G)FSK symbol mapping code.
 //   MODEM_OOK_PDTC - Configures the attack and decay times of the OOK Peak Detector.
 */
-#define RF_MODEM_AGC_WINDOW_SIZE_9 0x11, 0x20, 0x09, 0x38, 0x11, 0x2F, 0x2F, 0x00, 0x1A, 0xAA, 0xAB, 0x00, 0x29
+#define RF_MODEM_AGC_WINDOW_SIZE_9 0x11, 0x20, 0x09, 0x38, 0x11, 0x24, 0x24, 0x00, 0x1A, 0x80, 0x00, 0x00, 0x29
 
 /*
 // Set properties:           RF_MODEM_OOK_CNT1_9
