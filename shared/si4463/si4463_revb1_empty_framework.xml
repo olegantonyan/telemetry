@@ -7,7 +7,7 @@
           <Value>0</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCenterFrequency">
-          <Value>435</Value>
+          <Value>433.00000</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudChannelSpacing">
           <Value>500</Value>

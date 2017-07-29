@@ -21,7 +21,7 @@
 /*
 // Crys_freq(Hz): 26000000    Crys_tol(ppm): 20    IF_mode: 2    High_perf_Ch_Fil: 1    OSRtune: 0    Ch_Fil_Bw_AFC: 0    ANT_DIV: 0    PM_pattern: 0    
 // MOD_type: 2    Rsymb(sps): 20000    Fdev(Hz): 30000    RXBW(Hz): 150000    Manchester: 0    AFC_en: 0    Rsymb_error: 0.0    Chip-Version: 2    
-// RF Freq.(MHz): 435    API_TC: 29    fhst: 500000    inputBW: 0    BERT: 0    RAW_dout: 0    D_source: 0    Hi_pfm_div: 1    
+// RF Freq.(MHz): 433    API_TC: 29    fhst: 500000    inputBW: 0    BERT: 0    RAW_dout: 0    D_source: 0    Hi_pfm_div: 1    
 // 
 // # RX IF frequency is  -406250 Hz
 // # WB filter 3 (BW = 107.02 kHz);  NB-filter 3 (BW = 107.02 kHz)
@@ -543,7 +543,7 @@
 //   FREQ_CONTROL_W_SIZE - Set window gating period (in number of crystal reference clock cycles) for counting VCO frequency during calibration.
 //   FREQ_CONTROL_VCOCNT_RX_ADJ - Adjust target count for VCO calibration in RX mode.
 */
-#define RF_FREQ_CONTROL_INTE_8 0x11, 0x40, 0x08, 0x00, 0x41, 0x0F, 0x62, 0x76, 0x9D, 0x8A, 0x20, 0xFE
+#define RF_FREQ_CONTROL_INTE_8 0x11, 0x40, 0x08, 0x00, 0x41, 0x0C, 0xEC, 0x4E, 0x9D, 0x8A, 0x20, 0xFE
 
 
 // AUTOMATICALLY GENERATED CODE! 
