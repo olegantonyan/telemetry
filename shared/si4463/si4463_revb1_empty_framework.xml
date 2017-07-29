@@ -62,7 +62,7 @@
           <SelectedIndex>2</SelectedIndex>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDataRate">
-          <Value>30</Value>
+          <Value>15</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudDeviation">
           <Value>20</Value>
@@ -118,7 +118,7 @@
     <tbpPacketHandler Type="System.Windows.Forms.TabPage">
       <pccPacketHandlerConfigurator Type="NewWDS.PacketConfigControl">
         <DataItem Type="System.Windows.Forms.ComboBox" Name="cbbPacketStructure">
-          <SelectedIndex>1</SelectedIndex>
+          <SelectedIndex>0</SelectedIndex>
         </DataItem>
         <tabGeneralConfig Type="System.Windows.Forms.TabControl">
           <tbpGeneralPacketConfig Type="System.Windows.Forms.TabPage">

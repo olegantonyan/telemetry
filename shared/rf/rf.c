@@ -6,11 +6,6 @@
 #include "si4463/si4463.h"
 #include "main.h"
 
-#define RF_PACKET_LENGTH (RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH - 4) // 4 bytes for software CRC
-#if (RF_PACKET_LENGTH % 4 != 0)
-  #error "RF_PACKET_LENGTH must be 4 bytes aligned"
-#endif
-
 static si4463_t si4463;
 extern SPI_HandleTypeDef hspi1;
 extern CRC_HandleTypeDef hcrc;
@@ -30,6 +25,8 @@ static void si4463_select(void);
 static void si4463_deselect(void);
 static void fake_delay(uint32_t);
 static uint32_t crc(const uint8_t *data, size_t length);
+
+#define RF_PACKET_LENGTH_TOTAL (RF_PACKET_LENGTH + 4)
 
 void rf_init() {
   si4463.IsCTS = si4463_cts;
@@ -51,7 +48,7 @@ void rf_init() {
    * - invoked RX_TIMEOUT;
    * - invalid receive.
    * For receiveing next packet you have to invoke SI4463_StartRx() again!*/
-  SI4463_StartRx(&si4463, false, false, false);
+  SI4463_StartRx(&si4463, RF_PACKET_LENGTH_TOTAL, true, true, true);
   /* Enable interrupt pin and */
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   /* Clear interrupts after enabling interrupt pin.
@@ -65,13 +62,13 @@ void rf_init() {
 
 void rf_transmit(const uint8_t *data) {
   osSemaphoreWait(tx_semaphore, osWaitForever);
-  uint8_t buf[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH];
-  memcpy(buf, data, RF_PACKET_LENGTH);
+  uint8_t buf[RF_PACKET_LENGTH + 4];
+  memcpy(buf, data, RF_PACKET_LENGTH_TOTAL);
 
   uint32_t checksum = crc(data, RF_PACKET_LENGTH);
   memcpy(&buf[RF_PACKET_LENGTH], &checksum, sizeof(checksum));
 
-  SI4463_Transmit(&si4463, buf, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+  SI4463_Transmit(&si4463, buf, RF_PACKET_LENGTH_TOTAL);
 }
 
 bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
@@ -82,7 +79,7 @@ bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
   if (evt.status == osEventMessage) {
     osMutexWait(rx_buffer_mutex, osWaitForever);
     memcpy(data, evt.value.p, RF_PACKET_LENGTH);
-    uint32_t checksum = crc(evt.value.p, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    uint32_t checksum = crc(evt.value.p, RF_PACKET_LENGTH_TOTAL);
     osMutexRelease(rx_buffer_mutex);
     return checksum == 0;
   }
@@ -132,7 +129,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	  /* Clear TX FIFO */
 	  SI4463_ClearTxFifo(&si4463);
 	  /* Re-arm StartRX */
-	  SI4463_StartRx(&si4463, false, false, false);
+	  SI4463_StartRx(&si4463, RF_PACKET_LENGTH_TOTAL, true, true, true);
 
     osSemaphoreRelease(tx_semaphore);
   }
@@ -140,9 +137,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     /* Handling this interrupt here */
 
     /* Get FIFO data */
-    static uint8_t buf[RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH] = { 0 };
+    static uint8_t buf[RF_PACKET_LENGTH_TOTAL] = { 0 };
     osMutexWait(rx_buffer_mutex, osWaitForever);
-    SI4463_ReadRxFifo(&si4463, buf, RADIO_CONFIGURATION_DATA_RADIO_PACKET_LENGTH);
+    SI4463_ReadRxFifo(&si4463, buf, RF_PACKET_LENGTH_TOTAL);
     osMutexRelease(rx_buffer_mutex);
     osMessagePut(rx_queue, (uint32_t)buf, 0);
 
@@ -153,7 +150,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
      * It need because after successful receive a packet the chip change
      * state to READY.
      * There is re-armed mode for StartRx but it not correctly working */
-    SI4463_StartRx(&si4463, false, false, false);
+    SI4463_StartRx(&si4463, RF_PACKET_LENGTH_TOTAL, true, true, true);
   }
 
   SI4463_ClearAllInterrupts(&si4463);

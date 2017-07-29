@@ -1,7 +1,7 @@
 /*
  * si4463.h
  *
- *  Created on: 30 ï¿½ï¿½ï¿½. 2017 ï¿½.
+ *  Created on: 30 èþí. 2017 ã.
  *      Author: MINI
  */
 
@@ -130,10 +130,10 @@ void SI4463_ClearInterrupts(si4463_t * si4463);
 void SI4463_ClearAllInterrupts(si4463_t * si4463);
 void SI4463_GetCurrentState(si4463_t * si4463, uint8_t * state);
 void SI4463_SetCurrentState(si4463_t * si4463, uint8_t * state);
-void SI4463_StartTx(si4463_t * si4463, bool goToRxAfterTx);
-void SI4463_StartRx(si4463_t * si4463, bool goToRxAfterTimeout, bool goToRxAfterValid, bool goToRxAfterInvalid);
-void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * packet, uint8_t len);
-void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * packet, uint8_t len);
+void SI4463_StartTx(si4463_t * si4463, uint16_t len, bool goToRxAfterTx);
+void SI4463_StartRx(si4463_t * si4463, uint16_t len, bool goToRxAfterTimeout, bool goToRxAfterValid, bool goToRxAfterInvalid);
+void SI4463_WriteTxFifo(si4463_t * si4463, uint8_t * packet, uint16_t len);
+void SI4463_ReadRxFifo(si4463_t * si4463, uint8_t * packet, uint16_t len);
 void SI4463_GetTxFifoBytesCount(si4463_t * si4463, uint8_t * bytesCount);
 void SI4463_GetRxFifoEmptyBytes(si4463_t * si4463, uint8_t * emptyBytes);
 void SI4463_ClearRxFifo(si4463_t * si4463);
