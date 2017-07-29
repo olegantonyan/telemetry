@@ -3,10 +3,7 @@
 
 #include <stdint.h>
 
-#define RF_PACKET_LENGTH 12 // +4 bytes for software CRC
-#if (RF_PACKET_LENGTH % 4 != 0)
-  #error "RF_PACKET_LENGTH must be 4 bytes aligned"
-#endif
+#define RF_PACKET_LENGTH 12
 
 void rf_init();
 void rf_transmit(const uint8_t *data);
