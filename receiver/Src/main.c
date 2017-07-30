@@ -442,8 +442,6 @@ void StartDefaultTask(void const * argument)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 5 */
-  HAL_TIM_Base_Start(&htim3);
-  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); 
 
   /* Infinite loop */
   while(true) {

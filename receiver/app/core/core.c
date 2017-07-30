@@ -7,6 +7,7 @@
 #include "serial_log/serial_log.h"
 #include "leds/leds.h"
 #include "gui/gui.h"
+#include "buzzer/buzzer.h"
 
 static void thread(void const *arg);
 static osThreadId thread_handle;
@@ -23,16 +24,24 @@ static void thread(void const *arg) {
 
     uint8_t buf[64] = { 0 };
     if (rf_receive(buf, 300)) {
-      leds_status_flash(200);
-
       uint8_t voltage_integer = buf[1];
       uint16_t voltage_fractional = (buf[2] << 8) | buf[3];
+      if (voltage_integer > 99 || voltage_fractional > 9999) {
+        continue;
+      }
+
+      leds_status_flash(200);
 
       gui_display_voltage(voltage_integer, voltage_fractional);
 
       char string[16] = { 0 };
       snprintf(string, sizeof string, "v: %u.%04u\n", voltage_integer, voltage_fractional);
       serial_log_write(string);
+
+      if (voltage_integer > 0 && voltage_integer <= 21) {
+        buzzer_short_beeps_start(5000);
+      }
+
     } else {
       gui_display_voltage(0, 0);
     }

@@ -29,27 +29,6 @@ void gui_display_voltage(uint8_t integer, uint16_t fractional) {
 static void thread(void const *arg) {
   sh1106_init(&hi2c1, &wdt_kick);
 
-
-  /*sh1106_draw_character('4', 0, 0);
-  sh1106_draw_character('5', 26, 0);
-  sh1106_draw_character('6', 52, 0);
-  sh1106_draw_character('7', 78, 0);
-
-  //sh1106_draw_rectangle( 4, 4, 30, 0);
-
-  sh1106_draw_character('0', 0, 33);
-  sh1106_draw_character('1', 26, 33);
-  sh1106_draw_character('2', 52, 33);
-  sh1106_draw_character('3', 78, 33);
-
-  sh1106_draw_character('8', 0, 33);
-  sh1106_draw_character('9', 26, 33);*/
-
-  //sh1106_draw_string("24.89", 0, 0);
-
-  //sh1106_draw_string("89.4", 0, 33);
-
-
   while(true) {
     char string[6] = { 0 };
     snprintf(string, sizeof string, "%02u.%02u", voltage_integer, voltage_fractional);
