@@ -1,9 +1,9 @@
 #ifndef __SH1106_H
 #define __SH1106_H
 
-#include "stm32f1xx_hal.h"
+#include <stdint.h>
 
-void sh1106_init(I2C_HandleTypeDef *i2c);
+void sh1106_init(void (*i2c_transmit_fn)(uint16_t addr, uint8_t *data, uint16_t size));
 void sh1106_set_pixel(uint16_t x, uint16_t y, uint8_t value);
 void sh1106_render();
 void sh1106_draw_character(char character, uint16_t x_offset, uint16_t y_offset);

@@ -40,9 +40,9 @@ static void thread(void const *arg) {
       gui_display_voltage(voltage_integer, voltage_fractional);
       gui_display_current(current_integer, current_fractional);
 
-      char string[26] = { 0 };
-      snprintf(string, sizeof string, "v: %u.%04u a: %u.%02u\n", voltage_integer, voltage_fractional, current_integer, current_fractional);
-      serial_log_write(string);
+      //char string[26] = { 0 };
+      //snprintf(string, sizeof string, "v: %u.%04u a: %u.%02u\n", voltage_integer, voltage_fractional, current_integer, current_fractional);
+      //serial_log_write(string);
 
       if (voltage_integer > 0 && voltage_integer <= 21) {
       //  buzzer_short_beeps_start(5000);

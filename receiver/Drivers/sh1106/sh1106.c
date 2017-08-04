@@ -3,11 +3,9 @@
 #include "sh1106.h"
 #include "fonts.h"
 
-static I2C_HandleTypeDef *i2c = NULL;
+static void (*i2c_transmit_function)(uint16_t addr, uint8_t *data, uint16_t size) = NULL;
 static uint8_t buffer[128 * 64 / 8] = { 0 };
-
 static const uint8_t SH1106_I2C_ADDRESS = 0x78;
-static const uint8_t I2C_TIMEOUT = 10;
 
 static void init();
 static void send_command(uint8_t cmd);
@@ -15,8 +13,8 @@ static void send_data(uint8_t data);
 static void clear();
 static void refresh();
 
-void sh1106_init(I2C_HandleTypeDef *i2c_handle) {
-  i2c = i2c_handle;
+void sh1106_init(void (*i2c_transmit_fn)(uint16_t addr, uint8_t *data, uint16_t size)) {
+  i2c_transmit_function = i2c_transmit_fn;
   init();
   clear();
 }
@@ -139,10 +137,10 @@ static void refresh() {
 
 static void send_command(uint8_t cmd) {
   uint8_t buf[] = { 0x80, cmd };
-  HAL_I2C_Master_Transmit(i2c, SH1106_I2C_ADDRESS, buf, sizeof buf, I2C_TIMEOUT);
+  i2c_transmit_function(SH1106_I2C_ADDRESS, buf, sizeof buf);
 }
 
 static void send_data(uint8_t data) {
   uint8_t buf[] = { 0x40, data };
-  HAL_I2C_Master_Transmit(i2c, SH1106_I2C_ADDRESS, buf, sizeof buf, I2C_TIMEOUT);
+  i2c_transmit_function(SH1106_I2C_ADDRESS, buf, sizeof buf);
 }
