@@ -20,6 +20,7 @@ void core_init() {
 static void thread(void const *arg) {
   serial_log_write("core start\n");
   leds_status_off();
+
   while(true) {
     uint8_t buf[64] = { 0 };
     if (rf_receive(buf, 300)) {

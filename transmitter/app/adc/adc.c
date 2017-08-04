@@ -12,6 +12,7 @@ static volatile uint16_t buffer[16] = {0};
 static const size_t buffer_elements = sizeof buffer / sizeof buffer[0];
 
 static double average_voltage();
+static double average_current();
 
 void adc_init(ADC_HandleTypeDef *adc_handle) {
   HAL_ADCEx_Calibration_Start(adc_handle);
@@ -19,8 +20,11 @@ void adc_init(ADC_HandleTypeDef *adc_handle) {
 }
 
 ADC_Current adc_current_read() {
-  ADC_Current result;
+  double val = average_current();
 
+  ADC_Current result;
+  result.integer = (uint16_t)val;
+  result.fractional = trunc((val - result.integer) * 10000);
   return result;
 }
 
@@ -40,8 +44,16 @@ void adc_voltage_formatted_string(char * output_string, size_t max_length) {
 
 static double average_voltage() {
   double value = 0;
-  for (size_t i = 0; i < buffer_elements; i++) {
+  for (size_t i = 0; i < buffer_elements; i += 2) {
     value += buffer[i];
   }
-  return value / buffer_elements;
+  return value / buffer_elements * 2;
+}
+
+static double average_current() {
+  double value = 0;
+  for (size_t i = 1; i < buffer_elements; i += 2) {
+    value += buffer[i];
+  }
+  return value / buffer_elements * 2;
 }

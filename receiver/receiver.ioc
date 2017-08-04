@@ -1,18 +1,19 @@
 #MicroXplorer Configuration settings - do not modify
 FREERTOS.FootprintOK=true
 FREERTOS.INCLUDE_xTaskGetCurrentTaskHandle=1
-FREERTOS.IPParameters=Tasks01,INCLUDE_xTaskGetCurrentTaskHandle,FootprintOK,configUSE_TIMERS,configTIMER_TASK_PRIORITY,configTIMER_TASK_STACK_DEPTH,configTIMER_QUEUE_LENGTH,configTOTAL_HEAP_SIZE
+FREERTOS.IPParameters=Tasks01,INCLUDE_xTaskGetCurrentTaskHandle,FootprintOK,configUSE_TIMERS,configTIMER_TASK_PRIORITY,configTIMER_TASK_STACK_DEPTH,configTIMER_QUEUE_LENGTH,configTOTAL_HEAP_SIZE,configUSE_IDLE_HOOK
 FREERTOS.Tasks01=defaultTask,0,128,StartDefaultTask,Default,NULL
 FREERTOS.configTIMER_QUEUE_LENGTH=10
 FREERTOS.configTIMER_TASK_PRIORITY=2
 FREERTOS.configTIMER_TASK_STACK_DEPTH=256
 FREERTOS.configTOTAL_HEAP_SIZE=8192
+FREERTOS.configUSE_IDLE_HOOK=1
 FREERTOS.configUSE_TIMERS=1
 File.Version=6
 I2C1.I2C_Mode=I2C_Fast
 I2C1.IPParameters=I2C_Mode
 IWDG.IPParameters=Prescaler
-IWDG.Prescaler=IWDG_PRESCALER_16
+IWDG.Prescaler=IWDG_PRESCALER_8
 KeepUserPlacement=false
 Mcu.Family=STM32F1
 Mcu.IP0=CRC
