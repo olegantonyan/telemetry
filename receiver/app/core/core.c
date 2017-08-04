@@ -21,7 +21,6 @@ static void thread(void const *arg) {
   serial_log_write("core start\n");
   leds_status_off();
   while(true) {
-
     uint8_t buf[64] = { 0 };
     if (rf_receive(buf, 300)) {
       uint8_t voltage_integer = buf[1];
@@ -29,21 +28,28 @@ static void thread(void const *arg) {
       if (voltage_integer > 99 || voltage_fractional > 9999) {
         continue;
       }
+      uint8_t current_integer = buf[4];
+      uint16_t current_fractional = (buf[5] << 8) | buf[6];
+      if (current_fractional > 9999) {
+        //continue;
+      }
 
       leds_status_flash(200);
 
       gui_display_voltage(voltage_integer, voltage_fractional);
+      gui_display_current(current_integer, current_fractional);
 
-      char string[16] = { 0 };
-      snprintf(string, sizeof string, "v: %u.%04u\n", voltage_integer, voltage_fractional);
+      char string[26] = { 0 };
+      snprintf(string, sizeof string, "v: %u.%04u a: %u.%02u\n", voltage_integer, voltage_fractional, current_integer, current_fractional);
       serial_log_write(string);
 
       if (voltage_integer > 0 && voltage_integer <= 21) {
-        buzzer_short_beeps_start(5000);
+      //  buzzer_short_beeps_start(5000);
       }
 
     } else {
       gui_display_voltage(0, 0);
+      gui_display_current(0, 0);
     }
   }
 }

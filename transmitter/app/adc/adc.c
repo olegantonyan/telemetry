@@ -18,6 +18,12 @@ void adc_init(ADC_HandleTypeDef *adc_handle) {
   HAL_ADC_Start_DMA(adc_handle, (uint32_t *)buffer, buffer_elements);
 }
 
+ADC_Current adc_current_read() {
+  ADC_Current result;
+
+  return result;
+}
+
 ADC_Voltage adc_voltage_read() {
   double val = average_voltage() * VOLTS_PER_BIT_INPUT_VOLTAGE;
 

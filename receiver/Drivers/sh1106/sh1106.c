@@ -4,7 +4,6 @@
 #include "fonts.h"
 
 static I2C_HandleTypeDef *i2c = NULL;
-static void (*watchdog_kick_function)(void) = NULL;
 static uint8_t buffer[128 * 64 / 8] = { 0 };
 
 static const uint8_t SH1106_I2C_ADDRESS = 0x78;
@@ -16,9 +15,8 @@ static void send_data(uint8_t data);
 static void clear();
 static void refresh();
 
-void sh1106_init(I2C_HandleTypeDef *i2c_handle, void (*watchdog_kick_fn)(void)) {
+void sh1106_init(I2C_HandleTypeDef *i2c_handle) {
   i2c = i2c_handle;
-  watchdog_kick_function = watchdog_kick_fn;
   init();
   clear();
 }
@@ -135,9 +133,6 @@ static void refresh() {
     send_command(0x10);
     for(size_t column = 0; column < 128; column++) {
       send_data(buffer[row * 128 + column]);
-      if (watchdog_kick_function != NULL) {
-        watchdog_kick_function();
-      }
     }
   }
 }
