@@ -3,10 +3,13 @@
 #include "adc/adc.h"
 
 #define VREF 3.3
+#define VOLTS_PER_BIT (VREF / 4096)
 
 #define DIVIDER_COEFFICIENT_VOLTAGE 7.96
-#define VOLTS_PER_BIT (VREF / 4096)
 #define VOLTS_PER_BIT_INPUT_VOLTAGE (VOLTS_PER_BIT * DIVIDER_COEFFICIENT_VOLTAGE)
+
+#define VOLT_PER_AMP_CURRENT 0.01 // 10 mV for ACS758-200B
+#define AMPS_PER_BIT (VOLTS_PER_BIT / VOLT_PER_AMP_CURRENT)
 
 static volatile uint16_t buffer[16] = {0};
 static const size_t buffer_elements = sizeof buffer / sizeof buffer[0];
@@ -20,7 +23,7 @@ void adc_init(ADC_HandleTypeDef *adc_handle) {
 }
 
 ADC_Current adc_current_read() {
-  double val = average_current();
+  double val = (2048 - average_current()) * AMPS_PER_BIT; // bi-directional - shift 0
 
   ADC_Current result;
   result.integer = (uint16_t)val;

@@ -27,25 +27,25 @@ static void thread(void const *arg) {
       uint8_t voltage_integer = buf[1];
       uint16_t voltage_fractional = (buf[2] << 8) | buf[3];
       if (voltage_integer > 99 || voltage_fractional > 9999) {
-        continue;
+        //continue;
       }
-      uint8_t current_integer = buf[4];
+      /*uint8_t current_integer = buf[4];
       uint16_t current_fractional = (buf[5] << 8) | buf[6];
       if (current_fractional > 9999) {
         //continue;
-      }
+      }*/
 
       leds_status_flash(200);
 
       gui_display_voltage(voltage_integer, voltage_fractional);
-      gui_display_current(current_integer, current_fractional);
+      //gui_display_current(current_integer, current_fractional);
 
       //char string[26] = { 0 };
       //snprintf(string, sizeof string, "v: %u.%04u a: %u.%02u\n", voltage_integer, voltage_fractional, current_integer, current_fractional);
       //serial_log_write(string);
 
       if (voltage_integer > 0 && voltage_integer <= 21) {
-      //  buzzer_short_beeps_start(5000);
+        buzzer_short_beeps_start(5000);
       }
 
     } else {
