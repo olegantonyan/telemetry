@@ -4,7 +4,7 @@
     <tbpFrequencyAndPower Type="System.Windows.Forms.TabPage">
       <grbFequencyControl Type="System.Windows.Forms.GroupBox">
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudChannelNumber">
-          <Value>1</Value>
+          <Value>0</Value>
         </DataItem>
         <DataItem Type="System.Windows.Forms.NumericUpDown" Name="nudCenterFrequency">
           <Value>435</Value>
