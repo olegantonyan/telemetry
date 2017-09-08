@@ -8,12 +8,12 @@
 static void thread(void const *arg);
 osThreadId thread_handle;
 
-void serial_log_init() {
-  osThreadDef(serial_log_thread, thread, osPriorityNormal, 0, 128);
-  thread_handle = osThreadCreate(osThread(serial_log_thread), NULL);
+void log_init() {
+  osThreadDef(log_thread, thread, osPriorityNormal, 0, 128);
+  thread_handle = osThreadCreate(osThread(log_thread), NULL);
 }
 
-void serial_log_write(const char *str) {
+void log_write(const char *str) {
   //CDC_Transmit_FS((uint8_t *)str, strlen(str));
   printf(str);
 }

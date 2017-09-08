@@ -4,7 +4,7 @@
 #include "rf/rf.h"
 #include "cmsis_os.h"
 #include "main.h"
-#include "serial_log/serial_log.h"
+#include "log/log.h"
 #include "leds/leds.h"
 #include "gui/gui.h"
 #include "buzzer/buzzer.h"
@@ -18,7 +18,7 @@ void core_init() {
 }
 
 static void thread(void const *arg) {
-  serial_log_write("core start\n");
+  log_write("core start\n");
   leds_status_off();
 
   while(true) {
@@ -43,7 +43,7 @@ static void thread(void const *arg) {
 
       /*char string[26] = { 0 };
       snprintf(string, sizeof string, "v: %u.%04u a: %u.%02u\n", voltage_integer, voltage_fractional, current_integer, current_fractional);
-      serial_log_write(string);*/
+      log_write(string);*/
 
       if (voltage_integer > 0 && voltage_integer <= 21) {
       //  buzzer_short_beeps_start(5000);

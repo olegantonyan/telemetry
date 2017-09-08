@@ -4,6 +4,7 @@
 #include "rf/rf.h"
 #include "cmsis_os.h"
 #include "main.h"
+#include "syslog/syslog.h"
 
 static uint8_t device_id();
 static void thread(void const *arg);
@@ -15,6 +16,7 @@ void core_init() {
 }
 
 static void thread(void const *arg) {
+  syslog_write("started %s", "hello");
   while(true) {
     uint8_t data[RF_PACKET_LENGTH] = { 0x00 };
 

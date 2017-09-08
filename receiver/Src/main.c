@@ -53,7 +53,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
-#include "serial_log/serial_log.h"
+#include "log/log.h"
 #include "rf/rf.h"
 #include "core/core.h"
 #include "gui/gui.h"
@@ -139,7 +139,7 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   rf_init();
-  serial_log_init();
+  log_init();
   core_init();
   gui_init();
   /* USER CODE END 2 */
