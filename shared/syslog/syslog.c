@@ -2,7 +2,6 @@
 #include "cmsis_os.h"
 #include <stdarg.h>
 #include "syslog/syslog.h"
-#include "adc/adc.h"
 
 #define MINIM(a ,b) ((a) < (b) ? (a) : (b))
 
@@ -31,8 +30,8 @@ static void thread(void const *arg) {
   while(true) {
     osDelay(500);
 
-    char voltage_string[16] = {0};
-    adc_voltage_formatted_string(voltage_string, sizeof voltage_string);
+    //char voltage_string[16] = {0};
+    //adc_voltage_formatted_string(voltage_string, sizeof voltage_string);
     //char result_string[64] = {0};
     //printf("voltage: %s\n", voltage_string);
     //snprintf(result_string, sizeof result_string, "voltage: %s\n", voltage_string);

@@ -58,7 +58,7 @@
 
 #define RED_LED_Pin GPIO_PIN_13
 #define RED_LED_GPIO_Port GPIOC
-#define CC1101_GDO2_Pin GPIO_PIN_3
+#define CC1101_GDO2_Pin GPIO_PIN_4
 #define CC1101_GDO2_GPIO_Port GPIOA
 #define CC1101_SCK_Pin GPIO_PIN_5
 #define CC1101_SCK_GPIO_Port GPIOA

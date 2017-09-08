@@ -4,7 +4,7 @@
 #include "rf/rf.h"
 #include "cmsis_os.h"
 #include "main.h"
-#include "log/log.h"
+#include "syslog/syslog.h"
 #include "leds/leds.h"
 #include "gui/gui.h"
 #include "buzzer/buzzer.h"
@@ -18,7 +18,7 @@ void core_init() {
 }
 
 static void thread(void const *arg) {
-  log_write("core start\n");
+  syslog_write("core start");
   leds_status_off();
 
   while(true) {
