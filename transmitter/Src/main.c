@@ -364,7 +364,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(CC1101_GDO2_GPIO_Port, CC1101_GDO2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(CC1101_GDO0_GPIO_Port, CC1101_GDO0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, CC1101_CSN_Pin|CC1101_GDO0_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : RED_LED_Pin */
   GPIO_InitStruct.Pin = RED_LED_Pin;
@@ -378,21 +378,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(CC1101_GDO2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : CC1101_CSN_Pin */
-  GPIO_InitStruct.Pin = CC1101_CSN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(CC1101_CSN_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : CC1101_GDO0_Pin */
-  GPIO_InitStruct.Pin = CC1101_GDO0_Pin;
+  /*Configure GPIO pins : CC1101_CSN_Pin CC1101_GDO0_Pin */
+  GPIO_InitStruct.Pin = CC1101_CSN_Pin|CC1101_GDO0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(CC1101_GDO0_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 

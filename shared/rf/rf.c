@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "cc1101/cc1101.h"
 #include "stm32f1xx_hal.h"
 #include "rf/rf.h"
 #include "cmsis_os.h"
@@ -14,7 +15,14 @@ osMessageQDef(rx_queue, 1, uint8_t *);
 static osMutexId rx_buffer_mutex;
 osMutexDef(rx_buffer_mutex);
 
+static void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
+static void cc1101_chip_select(bool state);
+
 void rf_init() {
+  CC1101_t config;
+  config.write_read = cc1101_spi_write_read;
+  config.chip_select = cc1101_chip_select;
+  cc1101_init(&config);
 
   //HAL_NVIC_DisableIRQ(EXTI0_IRQn);
 
@@ -47,7 +55,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
 
-  SI4463_GetInterrupts(&si4463);
+  //SI4463_GetInterrupts(&si4463);
 
   /*
   static uint8_t buf[RF_PACKET_LENGTH] = { 0 };
@@ -57,7 +65,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   osMutexRelease(rx_buffer_mutex);
   osMessagePut(rx_queue, (uint32_t)buf, 0);
   */
+}
 
+void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length) {
+  HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)tx_data, (uint8_t *)rx_data, length, 100);
+}
 
-  }
+void cc1101_chip_select(bool state) {
+  HAL_GPIO_WritePin(CC1101_CSN_GPIO_Port, CC1101_CSN_Pin, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }

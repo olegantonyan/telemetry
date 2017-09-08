@@ -11,6 +11,31 @@
 #ifndef SMARTRF_CC1100_H
 #define SMARTRF_CC1100_H
 
+/* Address Config = No address check */
+/* Base Frequency = 867.999939 */
+/* CRC Autoflush = false */
+/* CRC Enable = true */
+/* Carrier Frequency = 867.999939 */
+/* Channel Number = 0 */
+/* Channel Spacing = 199.951172 */
+/* Data Format = Normal mode */
+/* Data Rate = 249.939 */
+/* Device Address = 0 */
+/* Manchester Enable = false */
+/* Modulated = true */
+/* Modulation Format = MSK */
+/* PA Ramping = false */
+/* Packet Length = 255 */
+/* Packet Length Mode = Variable packet length mode. Packet length configured by the first byte after sync word */
+/* Phase Transition Time = 0 */
+/* Preamble Count = 4 */
+/* RX Filter BW = 541.666667 */
+/* Sync Word Qualifier Mode = 30/32 sync word bits detected */
+/* TX Power = 0 */
+/* Whitening = false */
+/* PA table */
+#define PA_TABLE {0x8e,0x00,0x00,0x00,0x00,0x00,0x00,0x00}
+
 #define SMARTRF_RADIO_CC1100
 #define SMARTRF_SETTING_IOCFG0     0x06
 #define SMARTRF_SETTING_PKTCTRL0   0x05
