@@ -17,11 +17,13 @@ osMutexDef(rx_buffer_mutex);
 
 static void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
 static void cc1101_chip_select(bool state);
+void cc1101_delay(uint32_t ms);
 
 void rf_init() {
   CC1101_t config;
   config.write_read = cc1101_spi_write_read;
   config.chip_select = cc1101_chip_select;
+  config.delay = cc1101_delay;
   cc1101_init(&config);
 
   //HAL_NVIC_DisableIRQ(EXTI0_IRQn);
@@ -73,4 +75,9 @@ void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t le
 
 void cc1101_chip_select(bool state) {
   HAL_GPIO_WritePin(CC1101_CSN_GPIO_Port, CC1101_CSN_Pin, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
+}
+
+void cc1101_delay(uint32_t ms) {
+  //osDelay(ms);
+  HAL_Delay(ms);
 }

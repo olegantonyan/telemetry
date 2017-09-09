@@ -9,6 +9,7 @@
 typedef struct {
   void (*write_read)(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
 	void (*chip_select)(bool select);
+  void (*delay)(uint32_t ms);
 } CC1101_t;
 
 bool cc1101_init(const CC1101_t *config);

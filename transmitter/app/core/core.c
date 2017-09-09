@@ -16,7 +16,7 @@ void core_init() {
 }
 
 static void thread(void const *arg) {
-  syslog_write("started %s", "hello");
+  syslog_write("started");
   while(true) {
     uint8_t data[RF_PACKET_LENGTH] = { 0x00 };
 
