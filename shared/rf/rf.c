@@ -17,13 +17,15 @@ osMutexDef(rx_buffer_mutex);
 
 static void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
 static void cc1101_chip_select(bool state);
-void cc1101_delay(uint32_t ms);
+static void cc1101_delay(uint32_t ms);
+static void cc1101_wait_chip_ready();
 
 void rf_init() {
   CC1101_t config;
   config.write_read = cc1101_spi_write_read;
   config.chip_select = cc1101_chip_select;
   config.delay = cc1101_delay;
+  config.wait_chip_ready = cc1101_wait_chip_ready;
   cc1101_init(&config);
 
   //HAL_NVIC_DisableIRQ(EXTI0_IRQn);
@@ -69,15 +71,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   */
 }
 
-void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length) {
-  HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)tx_data, (uint8_t *)rx_data, length, 100);
+static void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length) {
+  if (!rx_data) {
+    HAL_SPI_Transmit(&hspi1, (uint8_t *)tx_data, length, 100);
+  } else {
+    HAL_SPI_TransmitReceive(&hspi1, (uint8_t *)tx_data, (uint8_t *)rx_data, length, 100);
+  }
 }
 
-void cc1101_chip_select(bool state) {
+static void cc1101_chip_select(bool state) {
   HAL_GPIO_WritePin(CC1101_CSN_GPIO_Port, CC1101_CSN_Pin, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
 
-void cc1101_delay(uint32_t ms) {
+static void cc1101_delay(uint32_t ms) {
   //osDelay(ms);
   HAL_Delay(ms);
+  //for(volatile uint32_t i = 0; i < 1000; i++);
+}
+
+static void cc1101_wait_chip_ready() {
+  while(HAL_GPIO_ReadPin(CC1101_GDO2_GPIO_Port, CC1101_GDO2_Pin) == GPIO_PIN_SET);
 }
