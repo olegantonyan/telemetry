@@ -38,7 +38,8 @@ void rf_init() {
 }
 
 void rf_transmit(const uint8_t *data) {
-  osSemaphoreWait(tx_semaphore, osWaitForever);
+  //osSemaphoreWait(tx_semaphore, osWaitForever);
+  cc1101_transmit(data, RF_PACKET_LENGTH);
 }
 
 bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
@@ -58,6 +59,7 @@ bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
+  printf("INTERRUPT!\n");
 
   //SI4463_GetInterrupts(&si4463);
 

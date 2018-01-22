@@ -121,6 +121,23 @@ bool cc1101_init(const CC1101_t *c) {
   return true;
 }
 
+bool cc1101_transmit(const uint8_t *data, uint16_t length) {
+  uint8_t state = 0;
+
+  write_burst(0x3F, data, length); // TX FIFO write
+
+  strobe(SIDLE);
+  state = read_register(MARCSTATE);
+  printf("MARCSTATE after SIDLE = 0x%X\n", state);
+
+  strobe(STX); // enable TX
+  state = read_register(MARCSTATE);
+  printf("MARCSTATE after STX = 0x%X\n", state);
+  // TODO wait for TX finish and switch to idle maybe?
+
+  return state == 0x01;
+}
+
 static void reset() {
   config.chip_select(true);
   config.chip_select(false);

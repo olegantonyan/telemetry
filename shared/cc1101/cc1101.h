@@ -12,5 +12,6 @@ typedef struct {
 } CC1101_t;
 
 bool cc1101_init(const CC1101_t *config);
+bool cc1101_transmit(const uint8_t *data, uint16_t length);
 
 #endif
