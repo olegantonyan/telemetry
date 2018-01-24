@@ -32,14 +32,17 @@ void rf_init() {
 
   //HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
   tx_semaphore = osSemaphoreCreate(osSemaphore(tx_semaphore), 1);
   rx_queue = osMessageCreate(osMessageQ(rx_queue), NULL);
   rx_buffer_mutex = osMutexCreate(osMutex(rx_buffer_mutex));
 }
 
 void rf_transmit(const uint8_t *data) {
-  //osSemaphoreWait(tx_semaphore, osWaitForever);
+  osSemaphoreWait(tx_semaphore, osWaitForever);
   cc1101_transmit(data, RF_PACKET_LENGTH);
+  osSemaphoreRelease(tx_semaphore);
 }
 
 bool rf_receive(uint8_t * data, uint32_t timeout_ms) {

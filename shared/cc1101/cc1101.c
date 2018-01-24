@@ -80,11 +80,41 @@
 #define TEST2    0x2C         // Various test settings
 #define TEST1    0x2D         // Various test settings
 #define TEST0    0x2E         // Various test settings
-//CC1100 - R/W offsets
-#define WRITE_SINGLE_BYTE   0x00
-#define WRITE_BURST         0x40
-#define READ_SINGLE_BYTE    0x80
-#define READ_BURST          0xC0
+
+/*------------------------[CC1100 - FIFO commands]----------------------------*/
+#define TXFIFO_BURST        0x7F    //write burst only
+#define TXFIFO_SINGLE_BYTE  0x3F    //write single only
+#define RXFIFO_BURST        0xFF    //read burst only
+#define RXFIFO_SINGLE_BYTE  0xBF    //read single only
+#define PATABLE_BURST       0x7E    //power control read/write
+#define PATABLE_SINGLE_BYTE 0xFE    //power control read/write
+/*---------------------------[END FIFO commands]------------------------------*/
+
+typedef enum {
+  SLEEP             = 0,   // SLEEP
+  IDLE              = 1,   // IDLE
+  XOFF              = 2,   // XOFF
+  VCOON_MC          = 3,   // MANCAL
+  REGON_MC          = 4,   // MANCAL
+  MANCAL            = 5,   // MANCAL
+  VCOON             = 6,   // FS_WAKEUP
+  REGON             = 7,   // FS_WAKEUP
+  STARTCAL          = 8,   // CALIBRATE
+  BWBOOST           = 9,   // SETTLING
+  FS_LOCK           = 10,  // SETTLING
+  IFADCON           = 11,  // SETTLING
+  ENDCAL            = 12,  // CALIBRATE
+  RX                = 13,  // RX
+  RX_END            = 14,  // RX
+  RX_RST            = 15,  // RX
+  TXRX_SWITCH       = 16,  // TXRX_SETTLING
+  RXFIFO_OVERFLOW   = 17,  // RXFIFO_OVERFLOW
+  FSTXON            = 18,  // FSTXON
+  TX                = 19,  // TX
+  TX_END            = 20,  // TX
+  RXTX_SWITCH       = 21,  // RXTX_SETTLING
+  TXFIFO_UNDERFLOW  = 22,  // TXFIFO_UNDERFLOW
+} CC1101_MARCSTATE;
 
 static CC1101_t config;
 
@@ -94,6 +124,8 @@ static uint8_t read_register(uint8_t addr);
 static void read_burst(uint8_t addr, uint8_t *buffer, size_t length);
 static void write_register(uint8_t addr, uint8_t value);
 static void write_burst(uint8_t addr, const uint8_t *buffer, size_t length);
+static void start_receive();
+static bool wait_for_marcstate(CC1101_MARCSTATE expected_state);
 
 bool cc1101_init(const CC1101_t *c) {
   if (!c) {
@@ -104,7 +136,10 @@ bool cc1101_init(const CC1101_t *c) {
   reset();
 
   strobe(SFTX);
+  wait_for_marcstate(IDLE);
   strobe(SFRX);
+  wait_for_marcstate(IDLE);
+
   uint8_t status = strobe(0);
   printf("status = 0x%X R/W=0\n", status);
   status = strobe(0x80);
@@ -114,28 +149,53 @@ bool cc1101_init(const CC1101_t *c) {
   uint8_t version = read_register(VERSION);
   printf("version = 0x%X, partnum = 0x%X\n", version, partnum); //checks if valid Chip ID is found. Usualy 0x03 or 0x14
 
-  write_burst(WRITE_BURST, RF_SETTINGS, sizeof(RF_SETTINGS));
+  write_burst(0, RF_SETTINGS, sizeof(RF_SETTINGS));
 
   printf("RCCTRL1_STATUS = 0x%X, RCCTRL0_STATUS = 0x%X\n", read_register(RCCTRL1_STATUS), read_register(RCCTRL0_STATUS));
+
+  start_receive();
 
   return true;
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
-  uint8_t state = 0;
-
-  write_burst(0x3F, data, length); // TX FIFO write
-
   strobe(SIDLE);
-  state = read_register(MARCSTATE);
-  printf("MARCSTATE after SIDLE = 0x%X\n", state);
+  wait_for_marcstate(IDLE);
+  strobe(SFTX);
+  wait_for_marcstate(IDLE);
 
-  strobe(STX); // enable TX
-  state = read_register(MARCSTATE);
-  printf("MARCSTATE after STX = 0x%X\n", state);
-  // TODO wait for TX finish and switch to idle maybe?
+  write_burst(0x7F, data, length); // TX FIFO write
 
-  return state == 0x01;
+  //config.delay(10);
+  printf("MARCSTATE after tx fifo write = %d\n", read_register(MARCSTATE));
+
+  //strobe(SIDLE);
+  //wait_for_marcstate(IDLE);
+
+  strobe(STX); // start TX
+  config.delay(100);
+  //wait_for_marcstate(0x13); // wait for TX finished
+  printf("MARCSTATE after STX = %d\n", read_register(MARCSTATE));
+
+  //printf("MCSM1 after STX = 0x%X\n", read_register(MCSM1));
+
+  return true;
+}
+
+static void start_receive() {
+  strobe(SIDLE);
+  wait_for_marcstate(IDLE);
+  strobe(SRX);
+  wait_for_marcstate(RX);
+  printf("MARCSTATE after SRX = %d\n", read_register(MARCSTATE));
+}
+
+static bool wait_for_marcstate(uint8_t expected_state) {
+  uint8_t state = 0;
+  do {
+    state = read_register(MARCSTATE);
+  } while(state != expected_state);
+  return true;
 }
 
 static void reset() {
@@ -156,7 +216,8 @@ static uint8_t strobe(uint8_t byte) {
 
 static uint8_t read_register(uint8_t addr) {
   config.chip_select(true);
-  const uint8_t tx[2] = { addr | READ_SINGLE_BYTE, 0xFF };
+  config.wait_chip_ready();
+  const uint8_t tx[2] = { addr | 0x80, 0xFF };
   uint8_t rx[2] = { 0 };
   config.write_read(tx, rx, sizeof(tx));
   config.chip_select(false);
@@ -166,7 +227,7 @@ static uint8_t read_register(uint8_t addr) {
 static void read_burst(uint8_t addr, uint8_t *buffer, size_t length) {
   config.chip_select(true);
   config.wait_chip_ready();
-  uint8_t tx = addr | READ_BURST;
+  uint8_t tx = addr | 0xC0;
   config.write_read(&tx, NULL, sizeof(tx));
 
   tx = 0xFF;
@@ -178,7 +239,7 @@ static void read_burst(uint8_t addr, uint8_t *buffer, size_t length) {
 static void write_register(uint8_t addr, uint8_t value) {
   config.chip_select(true);
   config.wait_chip_ready();
-  uint8_t tx[2] = { addr | WRITE_SINGLE_BYTE, value };
+  uint8_t tx[2] = { addr | 0x00, value };
   config.write_read(tx, NULL, sizeof(tx));
   config.chip_select(false);
 }
@@ -186,7 +247,7 @@ static void write_register(uint8_t addr, uint8_t value) {
 static void write_burst(uint8_t addr, const uint8_t *buffer, size_t length) {
   config.chip_select(true);
   config.wait_chip_ready();
-  uint8_t tx = addr | WRITE_BURST;
+  uint8_t tx = addr | 0x40;
   config.write_read(&tx, NULL, sizeof(tx));
 
   config.write_read(buffer, NULL, length);

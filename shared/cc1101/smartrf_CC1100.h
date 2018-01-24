@@ -39,7 +39,7 @@
 const uint8_t RF_SETTINGS[] = {
     0x29,  // IOCFG2              GDO2 Output Pin Configuration
     0x2E,  // IOCFG1              GDO1 Output Pin Configuration
-    0x06,  // IOCFG0              GDO0 Output Pin Configuration
+    0x07,  // IOCFG0              GDO0 Output Pin Configuration
     0x07,  // FIFOTHR             RX FIFO and TX FIFO Thresholds
     0xD3,  // SYNC1               Sync Word, High Byte
     0x91,  // SYNC0               Sync Word, Low Byte
