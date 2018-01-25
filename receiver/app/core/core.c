@@ -35,11 +35,11 @@ static void thread(void const *arg) {
       if (current_fractional > 9999) {
         //continue;
       }
-      printf("recv: ");
+      /*printf("recv: ");
       for (int i = 0; i < RF_PACKET_LENGTH; i++) {
         printf("0x%X ", buf[i]);
       }
-      printf("\n");
+      printf("\n");*/
 
       leds_status_flash(200);
 

@@ -1,7 +1,6 @@
 #include "cc1101/cc1101.h"
 #include "cc1101/smartrf_CC1100.h"
 #include <stdio.h>
-#include <string.h>
 
 typedef enum {
   SRES     = 0x30,         // Reset chip
@@ -112,7 +111,7 @@ typedef enum {
   TXFIFO_UNDERFLOW  = 22,  // TXFIFO_UNDERFLOW
 } CC1101_MARCSTATE;
 
-#define CC1101_MAX_PACKET_LENGTH 60
+#define CC1101_MAX_PACKET_LENGTH 60 // TODO: handle packets > fifo
 
 static CC1101_t config;
 
