@@ -32,7 +32,7 @@
 // RX Filter BW = 58.035714
 // Sync Word Qualifier Mode = 30/32 sync word bits detected
 // TX Power = 0
-// Whitening = false
+// Whitening = true
 // PA table
 const uint8_t PA_TABLE[] = { 0xC3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 // Rf settings for CC1100
