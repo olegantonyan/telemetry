@@ -127,7 +127,13 @@ static uint8_t read_register(uint8_t addr);
 static void read_burst(uint8_t addr, uint8_t *buffer, size_t length);
 static void write_register(uint8_t addr, uint8_t value);
 static void write_burst(uint8_t addr, const uint8_t *buffer, size_t length);
-static void start_receive();
+static void start_rx();
+static void start_tx();
+static void read_rx_fifo(uint8_t *buffer, size_t length);
+static void write_tx_fifo(const uint8_t *buffer, size_t length);
+static void sidle();
+static void flush_tx_fifo();
+static void flush_rx_fifo();
 static bool wait_for_marcstate(CC1101_MARCSTATE expected_state);
 
 bool cc1101_init(const CC1101_t *c) {
@@ -137,11 +143,8 @@ bool cc1101_init(const CC1101_t *c) {
   config = *c;
 
   reset();
-
-  strobe(SFTX);
-  wait_for_marcstate(IDLE);
-  strobe(SFRX);
-  wait_for_marcstate(IDLE);
+  flush_rx_fifo();
+  flush_tx_fifo();
 
   uint8_t status = strobe(0);
   printf("status = 0x%X R/W=0\n", status);
@@ -156,47 +159,32 @@ bool cc1101_init(const CC1101_t *c) {
 
   printf("RCCTRL1_STATUS = 0x%X, RCCTRL0_STATUS = 0x%X\n", read_register(RCCTRL1_STATUS), read_register(RCCTRL0_STATUS));
 
-  start_receive();
+  start_rx();
 
   return true;
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
   if (length > CC1101_MAX_PACKET_LENGTH) {
-    return false; // TODO: support for packets > 64
+    return false;
   }
 
-  strobe(SIDLE);
-  wait_for_marcstate(IDLE);
-  strobe(SFTX);
-  wait_for_marcstate(IDLE);
+  sidle();
+  flush_tx_fifo();
 
-  uint8_t tx[255] = { 0 };
-  tx[0] = length;
-  memcpy(&tx[1], data, length);
-
-  write_burst(0x7F, tx, length + 1); // TX FIFO write
-
-  //printf("MARCSTATE after tx fifo write = %d\n", read_register(MARCSTATE));
-
-  //strobe(SIDLE);
-  //wait_for_marcstate(IDLE);
-
-  strobe(STX); // start TX
-
-  //wait_for_marcstate(0x13); // wait for TX finished
-  printf("MARCSTATE after STX = %d\n", read_register(MARCSTATE));
-
-  //printf("MCSM1 after STX = 0x%X\n", read_register(MCSM1));
+  uint8_t len[1] = { length };
+  write_tx_fifo(len, 1);
+  write_tx_fifo(data, length);
+  start_tx();
 
   return true;
 }
 
 void cc1101_gdo_interrupt() {
   uint8_t bytes_available = read_register(RXBYTES);
-  if ((bytes_available & 0x7F) && !(bytes_available & 0x80)) {
+  if ((bytes_available & 0x7F) && !(bytes_available & 0x80) && bytes_available <= CC1101_MAX_PACKET_LENGTH) {
     uint8_t data[CC1101_MAX_PACKET_LENGTH] = { 0 };
-    read_burst(0xFF, data, bytes_available);
+    read_rx_fifo(data, bytes_available);
     config.packet_received(data, bytes_available);
   }
 
@@ -204,14 +192,47 @@ void cc1101_gdo_interrupt() {
   if (state == TX_END) {
     config.packet_sent();
   }
-  start_receive();
+  start_rx();
 }
 
-static void start_receive() {
-  strobe(SIDLE);
+static void flush_tx_fifo() {
+  strobe(SFTX);
   wait_for_marcstate(IDLE);
+}
+
+static void flush_rx_fifo() {
   strobe(SFRX);
   wait_for_marcstate(IDLE);
+}
+
+static void sidle() {
+  strobe(SIDLE);
+  wait_for_marcstate(IDLE);
+}
+
+static void read_rx_fifo(uint8_t *buffer, size_t length) {
+  if (length == 1) {
+    *buffer = read_register(RXFIFO_SINGLE_BYTE);
+  } else {
+    read_burst(RXFIFO_BURST, buffer, length);
+  }
+}
+
+static void write_tx_fifo(const uint8_t *buffer, size_t length) {
+  if (length == 1) {
+    write_register(TXFIFO_SINGLE_BYTE, buffer[0]);
+  } else {
+    write_burst(TXFIFO_BURST, buffer, length);
+  }
+}
+
+static void start_tx() {
+  strobe(STX);
+}
+
+static void start_rx() {
+  sidle();
+  flush_rx_fifo();
   strobe(SRX);
   wait_for_marcstate(RX);
 }

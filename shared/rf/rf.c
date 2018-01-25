@@ -50,7 +50,7 @@ void rf_transmit(const uint8_t *data) {
   cc1101_transmit(data, RF_PACKET_LENGTH);
 }
 
-bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
+bool rf_receive(uint8_t *data, uint32_t timeout_ms) {
   if (timeout_ms == 0) {
     timeout_ms = osWaitForever;
   }
@@ -88,17 +88,9 @@ static void cc1101_wait_chip_ready() {
 static void cc1101_packet_received(const uint8_t *data, uint16_t length) {
   RxMessage_t *message = (RxMessage_t *)osPoolAlloc(mpool);
   memcpy(message->data, data + 1, RF_PACKET_LENGTH);
-
-  /*printf("packet received: ");
-  for (int i = 0; i < RF_PACKET_LENGTH; i++) {
-    printf("0x%X ", message->data[i]);
-  }
-  printf("\n");*/
-
   osMessagePut(rx_queue, (uint32_t)message, osWaitForever);
 }
 
 static void cc1101_packet_sent() {
-  printf("packet sent\n");
   osSemaphoreRelease(tx_semaphore);
 }
