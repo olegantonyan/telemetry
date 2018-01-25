@@ -36,11 +36,10 @@ static void thread(void const *arg) {
     data[11] = 0;
 
     HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
-    syslog_write("sending...");
     rf_transmit(data);
     HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
 
-    osDelay(1000);
+    osDelay(50);
   }
 }
 

@@ -80,14 +80,18 @@ static void cc1101_wait_chip_ready() {
 }
 
 static void cc1101_packet_received(uint16_t length) {
-  printf("packet received\n");
+  printf("packet received: ");
 
   //osMutexWait(rx_buffer_mutex, osWaitForever);
   static uint8_t buf[255];
   memset(buf, 0, sizeof buf);
   cc1101_read_received_data(buf, length);
+  for (int i = 0; i < length; i++) {
+    printf("0x%X ", buf[i]);
+  }
+  printf("\n");
   //osMutexRelease(rx_buffer_mutex);
-  osMessagePut(rx_queue, (uint32_t)buf, 0);
+  osMessagePut(rx_queue, (uint32_t)&buf[2], 0);
 }
 
 static void cc1101_packet_sent() {
