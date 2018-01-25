@@ -82,15 +82,6 @@
 #define TEST1    0x2D         // Various test settings
 #define TEST0    0x2E         // Various test settings
 
-/*------------------------[CC1100 - FIFO commands]----------------------------*/
-#define TXFIFO_BURST        0x7F    //write burst only
-#define TXFIFO_SINGLE_BYTE  0x3F    //write single only
-#define RXFIFO_BURST        0xFF    //read burst only
-#define RXFIFO_SINGLE_BYTE  0xBF    //read single only
-#define PATABLE_BURST       0x7E    //power control read/write
-#define PATABLE_SINGLE_BYTE 0xFE    //power control read/write
-/*---------------------------[END FIFO commands]------------------------------*/
-
 typedef enum {
   SLEEP             = 0,   // SLEEP
   IDLE              = 1,   // IDLE
@@ -131,9 +122,12 @@ static void start_rx();
 static void start_tx();
 static void read_rx_fifo(uint8_t *buffer, size_t length);
 static void write_tx_fifo(const uint8_t *buffer, size_t length);
+static void write_pa_table(const uint8_t *pa_table);
+static void write_rf_settings(const uint8_t *settings, size_t length);
 static void sidle();
 static void flush_tx_fifo();
 static void flush_rx_fifo();
+static bool is_crc_ok();
 static bool wait_for_marcstate(CC1101_MARCSTATE expected_state);
 
 bool cc1101_init(const CC1101_t *c) {
@@ -146,16 +140,17 @@ bool cc1101_init(const CC1101_t *c) {
   flush_rx_fifo();
   flush_tx_fifo();
 
-  uint8_t status = strobe(0);
+  /*uint8_t status = strobe(0);
   printf("status = 0x%X R/W=0\n", status);
   status = strobe(0x80);
   printf("status = 0x%X R/W=1\n", status);
-
+*/
   uint8_t partnum = read_register(PARTNUM);
   uint8_t version = read_register(VERSION);
   printf("version = 0x%X, partnum = 0x%X\n", version, partnum); //checks if valid Chip ID is found. Usualy 0x03 or 0x14
 
-  write_burst(0, RF_SETTINGS, sizeof(RF_SETTINGS));
+  write_rf_settings(RF_SETTINGS, sizeof RF_SETTINGS);
+  write_pa_table(PA_TABLE);
 
   printf("RCCTRL1_STATUS = 0x%X, RCCTRL0_STATUS = 0x%X\n", read_register(RCCTRL1_STATUS), read_register(RCCTRL0_STATUS));
 
@@ -182,7 +177,7 @@ bool cc1101_transmit(const uint8_t *data, uint16_t length) {
 
 void cc1101_gdo_interrupt() {
   uint8_t bytes_available = read_register(RXBYTES);
-  if ((bytes_available & 0x7F) && !(bytes_available & 0x80) && bytes_available <= CC1101_MAX_PACKET_LENGTH) {
+  if ((bytes_available & 0x7F) && !(bytes_available & 0x80) && bytes_available <= CC1101_MAX_PACKET_LENGTH && is_crc_ok()) {
     uint8_t data[CC1101_MAX_PACKET_LENGTH] = { 0 };
     read_rx_fifo(data, bytes_available);
     config.packet_received(data, bytes_available);
@@ -193,6 +188,15 @@ void cc1101_gdo_interrupt() {
     config.packet_sent();
   }
   start_rx();
+}
+
+static void write_rf_settings(const uint8_t *settings, size_t length) {
+  write_burst(0, settings, length);
+}
+
+static void write_pa_table(const uint8_t *pa_table) {
+  // 0xFE to read single
+  write_burst(0x7E, pa_table, 8); // always 8 bytes
 }
 
 static void flush_tx_fifo() {
@@ -210,19 +214,24 @@ static void sidle() {
   wait_for_marcstate(IDLE);
 }
 
+static bool is_crc_ok() {
+  uint8_t status = read_register(PKTSTATUS);
+  return (status & 0x80) == 0x80;
+}
+
 static void read_rx_fifo(uint8_t *buffer, size_t length) {
   if (length == 1) {
-    *buffer = read_register(RXFIFO_SINGLE_BYTE);
+    *buffer = read_register(0xBF);
   } else {
-    read_burst(RXFIFO_BURST, buffer, length);
+    read_burst(0xFF, buffer, length);
   }
 }
 
 static void write_tx_fifo(const uint8_t *buffer, size_t length) {
   if (length == 1) {
-    write_register(TXFIFO_SINGLE_BYTE, buffer[0]);
+    write_register(0x3F, buffer[0]);
   } else {
-    write_burst(TXFIFO_BURST, buffer, length);
+    write_burst(0x7F, buffer, length);
   }
 }
 
