@@ -34,7 +34,7 @@
 // TX Power = 0
 // Whitening = false
 // PA table
-const uint8_t PA_TABLE[] = {0x8e,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+const uint8_t PA_TABLE[] = { 0xC3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 // Rf settings for CC1100
 const uint8_t RF_SETTINGS[] = {
     0x29,  // IOCFG2              GDO2 Output Pin Configuration
@@ -45,7 +45,7 @@ const uint8_t RF_SETTINGS[] = {
     0x91,  // SYNC0               Sync Word, Low Byte
     0xFF,  // PKTLEN              Packet Length
     0x04,  // PKTCTRL1            Packet Automation Control
-    0x05,  // PKTCTRL0            Packet Automation Control
+    0x45,  // PKTCTRL0            Packet Automation Control
     0x00,  // ADDR                Device Address
     0x00,  // CHANNR              Channel Number
     0x06,  // FSCTRL1             Frequency Synthesizer Control
