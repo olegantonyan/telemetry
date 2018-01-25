@@ -8,18 +8,24 @@
 
 extern SPI_HandleTypeDef hspi1;
 
-static osSemaphoreId tx_semaphore;
+typedef struct {
+  uint8_t data[RF_PACKET_LENGTH];
+} RxMessage_t;
+
+osPoolDef(mpool, 16, RxMessage_t);
+static osPoolId mpool;
+
 osSemaphoreDef(tx_semaphore);
+static osSemaphoreId tx_semaphore;
+
+osMessageQDef(rx_queue, 16, RxMessage_t);
 static osMessageQId rx_queue;
-osMessageQDef(rx_queue, 1, uint8_t *);
-static osMutexId rx_buffer_mutex;
-osMutexDef(rx_buffer_mutex);
 
 static void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
 static void cc1101_chip_select(bool state);
 static void cc1101_delay(uint32_t ms);
 static void cc1101_wait_chip_ready();
-static void cc1101_packet_received(uint16_t length);
+static void cc1101_packet_received(const uint8_t *data, uint16_t length);
 static void cc1101_packet_sent();
 
 void rf_init() {
@@ -27,7 +33,7 @@ void rf_init() {
 
   tx_semaphore = osSemaphoreCreate(osSemaphore(tx_semaphore), 1);
   rx_queue = osMessageCreate(osMessageQ(rx_queue), NULL);
-  rx_buffer_mutex = osMutexCreate(osMutex(rx_buffer_mutex));
+  mpool = osPoolCreate(osPool(mpool));
 
   CC1101_t config;
   config.write_read = cc1101_spi_write_read;
@@ -50,9 +56,9 @@ bool rf_receive(uint8_t * data, uint32_t timeout_ms) {
   }
   osEvent evt = osMessageGet(rx_queue, timeout_ms);
   if (evt.status == osEventMessage) {
-    //osMutexWait(rx_buffer_mutex, osWaitForever);
-    memcpy(data, evt.value.p, RF_PACKET_LENGTH);
-    //osMutexRelease(rx_buffer_mutex);
+    RxMessage_t *message = (RxMessage_t *)evt.value.p;
+    memcpy(data, message->data, RF_PACKET_LENGTH);
+    osPoolFree(mpool, message);
     return true;
   }
   return false;
@@ -79,19 +85,17 @@ static void cc1101_wait_chip_ready() {
   while(HAL_GPIO_ReadPin(CC1101_GDO2_GPIO_Port, CC1101_GDO2_Pin) == GPIO_PIN_SET);
 }
 
-static void cc1101_packet_received(uint16_t length) {
-  printf("packet received: ");
+static void cc1101_packet_received(const uint8_t *data, uint16_t length) {
+  RxMessage_t *message = (RxMessage_t *)osPoolAlloc(mpool);
+  memcpy(message->data, data + 1, RF_PACKET_LENGTH);
 
-  //osMutexWait(rx_buffer_mutex, osWaitForever);
-  static uint8_t buf[255];
-  memset(buf, 0, sizeof buf);
-  cc1101_read_received_data(buf, length);
-  for (int i = 0; i < length; i++) {
-    printf("0x%X ", buf[i]);
+  /*printf("packet received: ");
+  for (int i = 0; i < RF_PACKET_LENGTH; i++) {
+    printf("0x%X ", message->data[i]);
   }
-  printf("\n");
-  //osMutexRelease(rx_buffer_mutex);
-  osMessagePut(rx_queue, (uint32_t)&buf[2], 0);
+  printf("\n");*/
+
+  osMessagePut(rx_queue, (uint32_t)message, osWaitForever);
 }
 
 static void cc1101_packet_sent() {

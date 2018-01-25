@@ -34,6 +34,18 @@ static void thread(void const *arg) {
     data[9] = 0;
     data[10] = 0;
     data[11] = 0;
+    /*data[0] = 1;
+    data[1] = 2;
+    data[2] = 3;
+    data[3] = 4;
+    data[4] = 5;
+    data[5] = 6;
+    data[6] = 7;
+    data[7] = 8;
+    data[8] = 9;
+    data[9] = 10;
+    data[10] = 11;
+    data[11] = 12;*/
 
     HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_SET);
     rf_transmit(data);

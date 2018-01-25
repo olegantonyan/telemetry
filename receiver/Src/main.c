@@ -131,7 +131,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_CRC_Init();
-  MX_IWDG_Init();
+  //MX_IWDG_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   MX_I2C1_Init();
@@ -442,7 +442,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void vApplicationIdleHook(void) {
-  HAL_IWDG_Refresh(&hiwdg);
+  //HAL_IWDG_Refresh(&hiwdg);
 }
 /* USER CODE END 4 */
 

@@ -117,6 +117,8 @@ typedef enum {
   TXFIFO_UNDERFLOW  = 22,  // TXFIFO_UNDERFLOW
 } CC1101_MARCSTATE;
 
+#define CC1101_MAX_PACKET_LENGTH 60
+
 static CC1101_t config;
 
 static void reset();
@@ -160,7 +162,7 @@ bool cc1101_init(const CC1101_t *c) {
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
-  if (length > 63) {
+  if (length > CC1101_MAX_PACKET_LENGTH) {
     return false; // TODO: support for packets > 64
   }
 
@@ -192,22 +194,17 @@ bool cc1101_transmit(const uint8_t *data, uint16_t length) {
 
 void cc1101_gdo_interrupt() {
   uint8_t bytes_available = read_register(RXBYTES);
-  //printf("bytes_available interrupt = %d\n", bytes_available);
   if ((bytes_available & 0x7F) && !(bytes_available & 0x80)) {
-    config.packet_received(bytes_available);
+    uint8_t data[CC1101_MAX_PACKET_LENGTH] = { 0 };
+    read_burst(0xFF, data, bytes_available);
+    config.packet_received(data, bytes_available);
   }
 
   CC1101_MARCSTATE state = read_register(MARCSTATE);
-  //printf("MARCSTATE interrupt = %d\n", state);
   if (state == TX_END) {
     config.packet_sent();
   }
   start_receive();
-}
-
-bool cc1101_read_received_data(uint8_t *data, uint16_t length) {
-  read_burst(0xFF, data, length);
-  return true;
 }
 
 static void start_receive() {
