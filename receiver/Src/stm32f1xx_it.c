@@ -48,7 +48,7 @@ extern I2C_HandleTypeDef hi2c1;
 extern TIM_HandleTypeDef htim1;
 
 /******************************************************************************/
-/*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
+/*            Cortex-M3 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
 
 /**
@@ -69,6 +69,7 @@ void NMI_Handler(void)
 */
 void HardFault_Handler(void)
 {
+  printf("hardfault\n");
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
   /* USER CODE END HardFault_IRQn 0 */

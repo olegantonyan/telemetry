@@ -75,6 +75,7 @@
 #define CC1101_CSN_GPIO_Port GPIOB
 #define CC1101_GDO0_Pin GPIO_PIN_1
 #define CC1101_GDO0_GPIO_Port GPIOB
+#define CC1101_GDO0_EXTI_IRQn EXTI1_IRQn
 
 /* ########################## Assert Selection ############################## */
 /**

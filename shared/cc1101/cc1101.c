@@ -1,6 +1,7 @@
 #include "cc1101/cc1101.h"
 #include "cc1101/smartrf_CC1100.h"
 #include <stdio.h>
+#include <string.h>
 
 // CC1100-command strobes
 #define SRES     0x30         // Reset chip
@@ -159,21 +160,28 @@ bool cc1101_init(const CC1101_t *c) {
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
+  if (length > 63) {
+    return false; // TODO: support for packets > 64
+  }
+
   strobe(SIDLE);
   wait_for_marcstate(IDLE);
   strobe(SFTX);
   wait_for_marcstate(IDLE);
 
-  write_burst(0x7F, data, length); // TX FIFO write
+  uint8_t tx[255] = { 0 };
+  tx[0] = length;
+  memcpy(&tx[1], data, length);
 
-  //config.delay(10);
-  printf("MARCSTATE after tx fifo write = %d\n", read_register(MARCSTATE));
+  write_burst(0x7F, tx, length + 1); // TX FIFO write
+
+  //printf("MARCSTATE after tx fifo write = %d\n", read_register(MARCSTATE));
 
   //strobe(SIDLE);
   //wait_for_marcstate(IDLE);
 
   strobe(STX); // start TX
-  config.delay(100);
+
   //wait_for_marcstate(0x13); // wait for TX finished
   printf("MARCSTATE after STX = %d\n", read_register(MARCSTATE));
 
@@ -182,15 +190,36 @@ bool cc1101_transmit(const uint8_t *data, uint16_t length) {
   return true;
 }
 
+void cc1101_gdo_interrupt() {
+  uint8_t bytes_available = read_register(RXBYTES);
+  //printf("bytes_available interrupt = %d\n", bytes_available);
+  if ((bytes_available & 0x7F) && !(bytes_available & 0x80)) {
+    config.packet_received(bytes_available);
+  }
+
+  CC1101_MARCSTATE state = read_register(MARCSTATE);
+  //printf("MARCSTATE interrupt = %d\n", state);
+  if (state == TX_END) {
+    config.packet_sent();
+  }
+  start_receive();
+}
+
+bool cc1101_read_received_data(uint8_t *data, uint16_t length) {
+  read_burst(0xFF, data, length);
+  return true;
+}
+
 static void start_receive() {
   strobe(SIDLE);
   wait_for_marcstate(IDLE);
+  strobe(SFRX);
+  wait_for_marcstate(IDLE);
   strobe(SRX);
   wait_for_marcstate(RX);
-  printf("MARCSTATE after SRX = %d\n", read_register(MARCSTATE));
 }
 
-static bool wait_for_marcstate(uint8_t expected_state) {
+static bool wait_for_marcstate(CC1101_MARCSTATE expected_state) {
   uint8_t state = 0;
   do {
     state = read_register(MARCSTATE);
@@ -201,7 +230,6 @@ static bool wait_for_marcstate(uint8_t expected_state) {
 static void reset() {
   config.chip_select(true);
   config.chip_select(false);
-  config.delay(1);
   strobe(SRES);
 }
 

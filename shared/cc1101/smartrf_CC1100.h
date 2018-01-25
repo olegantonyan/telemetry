@@ -39,7 +39,7 @@
 const uint8_t RF_SETTINGS[] = {
     0x29,  // IOCFG2              GDO2 Output Pin Configuration
     0x2E,  // IOCFG1              GDO1 Output Pin Configuration
-    0x07,  // IOCFG0              GDO0 Output Pin Configuration
+    0x06,  // IOCFG0              GDO0 Output Pin Configuration
     0x07,  // FIFOTHR             RX FIFO and TX FIFO Thresholds
     0xD3,  // SYNC1               Sync Word, High Byte
     0x91,  // SYNC0               Sync Word, Low Byte
@@ -55,8 +55,8 @@ const uint8_t RF_SETTINGS[] = {
     0x76,  // FREQ0               Frequency Control Word, Low Byte
     0xF5,  // MDMCFG4             Modem Configuration
     0x83,  // MDMCFG3             Modem Configuration
-    0x03,  // MDMCFG2             Modem Configuration
-    0x22,  // MDMCFG1             Modem Configuration
+    0x07,  // MDMCFG2             Modem Configuration
+    0x00,  // MDMCFG1             Modem Configuration
     0xF8,  // MDMCFG0             Modem Configuration
     0x15,  // DEVIATN             Modem Deviation Setting
     0x07,  // MCSM2               Main Radio Control State Machine Configuration
