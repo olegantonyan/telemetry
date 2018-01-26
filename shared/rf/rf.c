@@ -23,7 +23,6 @@ static osMessageQId rx_queue;
 
 static void cc1101_spi_write_read(const uint8_t *tx_data, uint8_t *rx_data, uint16_t length);
 static void cc1101_chip_select(bool state);
-static void cc1101_delay(uint32_t ms);
 static void cc1101_wait_chip_ready();
 static void cc1101_packet_received(const uint8_t *data, uint16_t length);
 static void cc1101_packet_sent();

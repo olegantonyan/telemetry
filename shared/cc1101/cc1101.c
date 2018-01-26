@@ -126,7 +126,9 @@ static void start_tx();
 static void read_rx_fifo(uint8_t *buffer, size_t length);
 static void write_tx_fifo(const uint8_t *buffer, size_t length);
 static void write_pa_table(const uint8_t *pa_table);
+static void read_pa_table(uint8_t *pa_table);
 static void write_rf_settings(const uint8_t *settings, size_t length);
+static void read_rf_settings(uint8_t *settings, size_t length);
 static void sidle();
 static void flush_tx_fifo();
 static void flush_rx_fifo();
@@ -142,20 +144,25 @@ bool cc1101_init(const CC1101_t *c) {
   reset();
   flush_rx_fifo();
   flush_tx_fifo();
-
-  /*uint8_t status = strobe(0);
-  printf("status = 0x%X R/W=0\n", status);
-  status = strobe(0x80);
-  printf("status = 0x%X R/W=1\n", status);
-*/
-  uint8_t partnum = read_register(PARTNUM);
-  uint8_t version = read_register(VERSION);
-  printf("version = 0x%X, partnum = 0x%X\n", version, partnum); //checks if valid Chip ID is found. Usualy 0x03 or 0x14
-
   write_rf_settings(RF_SETTINGS, sizeof RF_SETTINGS);
   write_pa_table(PA_TABLE);
 
-  printf("RCCTRL1_STATUS = 0x%X, RCCTRL0_STATUS = 0x%X\n", read_register(RCCTRL1_STATUS), read_register(RCCTRL0_STATUS));
+#if DEBUG
+  printf("CC1101: PARTNUM = 0x%02X\n", read_register(PARTNUM));
+  printf("CC1101: VERSION = 0x%02X\n", read_register(VERSION));
+
+  uint8_t rf_settings[sizeof(RF_SETTINGS)] = { 0 };
+  read_rf_settings(rf_settings, sizeof rf_settings);
+  for (size_t i = 0; i < sizeof rf_settings; i++) {
+    printf("CC1101: RF_SETTINGS @ 0x%02X = 0x%02X\n", i, rf_settings[i]);
+  }
+
+  uint8_t pa_table[8] = { 0 };
+  read_pa_table(pa_table);
+  for (size_t i = 0; i < sizeof pa_table; i++) {
+    printf("CC1101: PATABLE @ 0x%02X = 0x%02X\n", i, pa_table[i]);
+  }
+#endif
 
   start_rx();
 
@@ -198,8 +205,16 @@ static void write_rf_settings(const uint8_t *settings, size_t length) {
 }
 
 static void write_pa_table(const uint8_t *pa_table) {
-  // 0xFE to read single
   write_burst(0x7E, pa_table, 8); // always 8 bytes
+}
+
+static void read_pa_table(uint8_t *pa_table) {
+  // 0xFE to read single
+  read_burst(0x7E, pa_table, 8);
+}
+
+static void read_rf_settings(uint8_t *settings, size_t length) {
+  read_burst(0, settings, length);
 }
 
 static void flush_tx_fifo() {
