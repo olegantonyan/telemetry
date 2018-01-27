@@ -41,6 +41,7 @@ void rf_init() {
   config.packet_received = cc1101_packet_received;
   config.packet_sent = cc1101_packet_sent;
   cc1101_init(&config);
+
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 }
 
