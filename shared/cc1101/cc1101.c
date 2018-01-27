@@ -170,6 +170,7 @@ bool cc1101_init(const CC1101_t *c) {
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
+  // TODO wait for RX finished if it's in progress
   if (length > CC1101_MAX_PACKET_LENGTH) {
     return false;
   }

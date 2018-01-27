@@ -279,7 +279,7 @@ static void MX_I2C1_Init(void)
 /* IWDG init function */
 static void MX_IWDG_Init(void)
 {
-
+return;
   hiwdg.Instance = IWDG;
   hiwdg.Init.Prescaler = IWDG_PRESCALER_8;
   hiwdg.Init.Reload = 4095;
@@ -442,7 +442,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void vApplicationIdleHook(void) {
-  HAL_IWDG_Refresh(&hiwdg);
+  //HAL_IWDG_Refresh(&hiwdg);
 }
 /* USER CODE END 4 */
 
@@ -456,8 +456,7 @@ void StartDefaultTask(void const * argument)
 
   /* Infinite loop */
   while(true) {
-    //HAL_IWDG_Refresh(&hiwdg);
-    osDelay(20);
+    osDelay(1000);
   }
   /* USER CODE END 5 */
 }
