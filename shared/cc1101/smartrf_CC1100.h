@@ -56,7 +56,7 @@ const uint8_t RF_SETTINGS[] = {
     0xF5,  // MDMCFG4             Modem Configuration
     0x83,  // MDMCFG3             Modem Configuration
     0x07,  // MDMCFG2             Modem Configuration
-    0x00,  // MDMCFG1             Modem Configuration
+    0x20,  // MDMCFG1             Modem Configuration
     0xF8,  // MDMCFG0             Modem Configuration
     0x15,  // DEVIATN             Modem Deviation Setting
     0x07,  // MCSM2               Main Radio Control State Machine Configuration
