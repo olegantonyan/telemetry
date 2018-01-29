@@ -114,6 +114,7 @@ typedef enum {
 #define CC1101_MAX_PACKET_LENGTH 60 // TODO: handle packets > fifo
 
 static CC1101_t config;
+static bool initialized = false;
 
 static void reset();
 static uint8_t strobe(CC1101_COMMAND_STROBE byte);
@@ -136,7 +137,7 @@ static bool is_crc_ok();
 static bool wait_for_marcstate(CC1101_MARCSTATE expected_state);
 
 bool cc1101_init(const CC1101_t *c) {
-  if (!c) {
+  if (!c || initialized) {
     return false;
   }
   config = *c;
@@ -166,6 +167,8 @@ bool cc1101_init(const CC1101_t *c) {
 
   start_rx();
 
+  initialized = true;
+
   return true;
 }
 
@@ -187,6 +190,10 @@ bool cc1101_transmit(const uint8_t *data, uint16_t length) {
 }
 
 void cc1101_gdo_interrupt() {
+  if (!initialized) {
+    return;
+  }
+
   uint8_t bytes_available = read_register(RXBYTES);
   if ((bytes_available & 0x7F) && !(bytes_available & 0x80) && bytes_available <= CC1101_MAX_PACKET_LENGTH && is_crc_ok()) {
     uint8_t data[CC1101_MAX_PACKET_LENGTH] = { 0 };

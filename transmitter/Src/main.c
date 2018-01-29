@@ -297,7 +297,7 @@ static void MX_CRC_Init(void)
 /* IWDG init function */
 static void MX_IWDG_Init(void)
 {
-return;
+
   hiwdg.Instance = IWDG;
   hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
   hiwdg.Init.Reload = 4095;
@@ -416,13 +416,13 @@ static void MX_GPIO_Init(void)
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI1_IRQn, 5, 0);
-  //HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
 void vApplicationIdleHook(void) {
-  //HAL_IWDG_Refresh(&hiwdg);
+  HAL_IWDG_Refresh(&hiwdg);
 }
 /* USER CODE END 4 */
 
@@ -491,6 +491,7 @@ void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+  printf("HAL error in file %s on line %d\n", file, line);
   while(1)
   {
   }
@@ -510,6 +511,7 @@ void assert_failed(uint8_t* file, uint32_t line)
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+    printf("Assert failed in file %s on line %lu\n", file, line);
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
