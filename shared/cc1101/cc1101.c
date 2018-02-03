@@ -115,6 +115,7 @@ typedef enum {
 
 static CC1101_t config;
 static bool initialized = false;
+static bool is_transmitting = false;
 
 static void reset();
 static uint8_t strobe(CC1101_COMMAND_STROBE byte);
@@ -133,7 +134,6 @@ static void read_rf_settings(uint8_t *settings, size_t length);
 static void sidle();
 static void flush_tx_fifo();
 static void flush_rx_fifo();
-static bool is_crc_ok();
 static bool wait_for_marcstate(CC1101_MARCSTATE expected_state);
 
 bool cc1101_init(const CC1101_t *c) {
@@ -148,18 +148,20 @@ bool cc1101_init(const CC1101_t *c) {
   write_rf_settings(RF_SETTINGS, sizeof RF_SETTINGS);
   write_pa_table(PA_TABLE);
 
-#if DEBUG
+#if CC1101_DEBUG
   printf("CC1101: PARTNUM = 0x%02X\n", read_register(PARTNUM));
   printf("CC1101: VERSION = 0x%02X\n", read_register(VERSION));
-
+#endif
   uint8_t rf_settings[sizeof(RF_SETTINGS)] = { 0 };
   read_rf_settings(rf_settings, sizeof rf_settings);
+#if CC1101_DEBUG
   for (size_t i = 0; i < sizeof rf_settings; i++) {
     printf("CC1101: RF_SETTINGS @ 0x%02X = 0x%02X\n", i, rf_settings[i]);
   }
-
+#endif
   uint8_t pa_table[8] = { 0 };
   read_pa_table(pa_table);
+#if CC1101_DEBUG
   for (size_t i = 0; i < sizeof pa_table; i++) {
     printf("CC1101: PATABLE @ 0x%02X = 0x%02X\n", i, pa_table[i]);
   }
@@ -173,7 +175,6 @@ bool cc1101_init(const CC1101_t *c) {
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
-  // TODO wait for RX finished if it's in progress
   if (length > CC1101_MAX_PACKET_LENGTH) {
     return false;
   }
@@ -186,6 +187,12 @@ bool cc1101_transmit(const uint8_t *data, uint16_t length) {
   write_tx_fifo(data, length);
   start_tx();
 
+#if CC1101_DEBUG
+  printf("CC1101: start transmission\n");
+#endif
+
+  is_transmitting = true;
+
   return true;
 }
 
@@ -194,18 +201,31 @@ void cc1101_gdo_interrupt() {
     return;
   }
 
-  uint8_t bytes_available = read_register(RXBYTES);
-  if ((bytes_available & 0x7F) && !(bytes_available & 0x80) && bytes_available <= CC1101_MAX_PACKET_LENGTH && is_crc_ok()) {
-    uint8_t data[CC1101_MAX_PACKET_LENGTH] = { 0 };
-    read_rx_fifo(data, bytes_available);
-    config.packet_received(data, bytes_available);
-  }
+#if CC1101_DEBUG
+  printf("CC1101: interrupt, MARCSTATE = %u\n", read_register(MARCSTATE));
+#endif
 
-  CC1101_MARCSTATE state = read_register(MARCSTATE);
-  if (state == TX_END) {
+  if (is_transmitting) {
     config.packet_sent();
+    is_transmitting = false;
+  } else {
+    uint8_t bytes_available = read_register(RXBYTES);
+#if CC1101_DEBUG
+    printf("CC1101: RX fifo bytes available = %u\n", bytes_available);
+#endif
+    if ((bytes_available & 0x7F) && !(bytes_available & 0x80) && bytes_available <= CC1101_MAX_PACKET_LENGTH) {
+      uint8_t data[CC1101_MAX_PACKET_LENGTH] = { 0 };
+      read_rx_fifo(data, bytes_available);
+#if CC1101_DEBUG
+      printf("CC1101: received ");
+      for (uint16_t i = 0; i < bytes_available; i++) {
+        printf("%02X", data[i]);
+      }
+      printf("\n");
+#endif
+      config.packet_received(data, bytes_available);
+    }
   }
-  start_rx();
 }
 
 static void write_rf_settings(const uint8_t *settings, size_t length) {
@@ -238,11 +258,6 @@ static void flush_rx_fifo() {
 static void sidle() {
   strobe(SIDLE);
   wait_for_marcstate(IDLE);
-}
-
-static bool is_crc_ok() {
-  uint8_t status = read_register(PKTSTATUS);
-  return (status & 0x80) == 0x80;
 }
 
 static void read_rx_fifo(uint8_t *buffer, size_t length) {
