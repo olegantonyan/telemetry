@@ -224,6 +224,8 @@ void cc1101_gdo_interrupt() {
       printf("\n");
 #endif
       config.packet_received(data, bytes_available);
+    } else {
+      start_rx();
     }
   }
 }
