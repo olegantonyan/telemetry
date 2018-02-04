@@ -45,9 +45,12 @@ void rf_init() {
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 }
 
-void rf_transmit(const uint8_t *data) {
-  osSemaphoreWait(tx_semaphore, osWaitForever);
-  cc1101_transmit(data, RF_PACKET_LENGTH);
+bool rf_transmit(const uint8_t *data) {
+  if (!cc1101_transmit(data, RF_PACKET_LENGTH)) {
+    return false;
+  }
+  osSemaphoreWait(tx_semaphore, osWaitForever); // TODO timeout here?
+  return true;
 }
 
 bool rf_receive(uint8_t *data, uint32_t timeout_ms) {

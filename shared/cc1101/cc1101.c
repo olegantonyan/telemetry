@@ -175,7 +175,7 @@ bool cc1101_init(const CC1101_t *c) {
 }
 
 bool cc1101_transmit(const uint8_t *data, uint16_t length) {
-  if (length > CC1101_MAX_PACKET_LENGTH) {
+  if (length > CC1101_MAX_PACKET_LENGTH || is_transmitting) {
     return false;
   }
 

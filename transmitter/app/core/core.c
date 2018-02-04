@@ -51,7 +51,7 @@ static void thread(void const *arg) {
     rf_transmit(data);
     HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
 
-    osDelay(50);
+    osDelay(10);
   }
 }
 
