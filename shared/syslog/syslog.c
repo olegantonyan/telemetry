@@ -1,6 +1,8 @@
-#include "usbd_cdc_if.h"
-#include "cmsis_os.h"
 #include <stdarg.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "cmsis_os.h"
 #include "syslog/syslog.h"
 
 #define MINIM(a ,b) ((a) < (b) ? (a) : (b))
@@ -14,8 +16,6 @@ void syslog_write(const char *fmt, ...) {
   if (!initialized) {
     init();
   }
-
-  //CDC_Transmit_FS((uint8_t *)str, strlen(str));
 
   va_list args;
 	va_start(args, fmt);

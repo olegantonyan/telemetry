@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name telemetry_components)(type KiCad)(uri /home/oleg/projects/telemetry/kicad_libraries/telemetry_components.pretty)(options "")(descr ""))
+  (lib (name Sensor_Current)(type KiCad)(uri /home/oleg/projects/telemetry/kicad_libraries/Sensor_Current.pretty)(options "")(descr ""))
+)
