@@ -57,6 +57,7 @@ bool rf_receive(uint8_t *data, uint32_t timeout_ms) {
   if (timeout_ms == 0) {
     timeout_ms = osWaitForever;
   }
+  osThreadYield(); // NOTE without this Hardfault in new cubemx, somewhere in __get_IPSR()
   osEvent evt = osMessageGet(rx_queue, timeout_ms);
   if (evt.status == osEventMessage) {
     RxMessage_t *message = (RxMessage_t *)evt.value.p;
