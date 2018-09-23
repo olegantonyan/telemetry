@@ -35,6 +35,7 @@ void gui_display_current(uint8_t integer, uint16_t fractional) {
 }
 
 static void thread(void const *arg) {
+  osDelay(50); // sometimes displsy fail to initialize without delay
   sh1106_init(&i2c_transmit);
 
   while(true) {
